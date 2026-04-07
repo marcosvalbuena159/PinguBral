@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>PenguBrawl v1.0.8.0</title>
+<link rel="stylesheet" href="css/main.css">
+<link rel="stylesheet" href="css/ajuste.css">
+<link rel="stylesheet" href="css/colonia.css">
+<link rel="stylesheet" href="css/dominio.css">
+<link rel="stylesheet" href="css/guarida.css">
+<link rel="stylesheet" href="css/misiones.css">
+<link rel="stylesheet" href="css/perfil.css">
+<link rel="stylesheet" href="css/tienda.css">
+</head>
+<body>
+
+<div id="login" class="auth-screen">
+  <div id="login-content">
+    <div class="auth-logo">PenguBrawl</div>
+    <div class="auth-div"></div>
+    <div class="auth-tag">Destruye · Conquista · Domina</div>
+    <div class="lform">
+      <input class="linput" id="li-u" type="text" placeholder="Usuario" maxlength="16" autocomplete="off">
+      <input class="linput" id="li-p" type="password" placeholder="Contraseña" maxlength="32" autocomplete="off">
+      <div class="lerr" id="li-err"></div>
+      <button class="btn btn-gold" style="font-size:18px;padding:14px 0;width:100%" onclick="doLogin()">JUGAR</button>
+      <div style="display:flex;gap:7px">
+        <button class="btn btn-s btn-sm" style="flex:1;font-size:11px" onclick="doGuest()">👤 Invitado</button>
+        <button class="btn btn-s btn-sm" style="flex:1;font-size:11px" onclick="showReg()">✨ Registrarse</button>
+      </div>
+    </div>
+  </div>
+  <div class="auth-ver">v1.0.7.5</div>
+  <div id="auth-bar"></div>
+</div>
+
+<div id="register" class="auth-screen hidden">
+  <div id="reg-bg"><div style="position:absolute;inset:0;background:radial-gradient(ellipse at 50% 20%,rgba(10,20,60,.7) 0%,rgba(0,2,12,.98) 70%)"></div><div class="hexgrid"></div></div>
+  <div style="position:relative;display:flex;flex-direction:column;align-items:center;gap:12px">
+    <div style="font-family:'Fredoka One',cursive;font-size:32px;background:linear-gradient(135deg,#7ab8ff,#fff);-webkit-background-clip:text;-webkit-text-fill-color:transparent">Crear Cuenta</div>
+    <div style="font-size:11px;color:rgba(255,255,255,.32)">¡Únete a la arena!</div>
+    <div class="lform" style="margin-top:0">
+      <input class="linput" id="ru" type="text" placeholder="Usuario (mín 3)" maxlength="16" autocomplete="off">
+      <input class="linput" id="rp" type="password" placeholder="Contraseña (mín 4)" maxlength="32" autocomplete="off">
+      <input class="linput" id="rp2" type="password" placeholder="Confirmar contraseña" maxlength="32" autocomplete="off">
+      <div class="lerr" id="reg-err"></div>
+      <button class="btn btn-gold" style="font-size:15px;padding:12px 0;width:100%" onclick="doReg()">✨ Crear Cuenta</button>
+      <button class="btn btn-s btn-sm" onclick="showLogin()">← Volver al login</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ DASHBOARD SHELL ═══ -->
+<div id="dashboard" class="hidden">
+  <!-- TOPBAR -->
+  <div id="topbar">
+    <div id="tb-logo">PenguBrawl</div>
+    <div class="tb-sep"></div>
+    <!-- icon buttons -->
+    <div class="tb-icon-btn" title="Notificaciones" onclick="openModal('notif-modal')">🔔<div class="tb-badge">3</div></div>
+    <div class="tb-icon-btn" title="Alertas del sistema" onclick="openModal('alerts-modal')">⚠️<div class="tb-badge" style="background:#ffaa22">1</div></div>
+    <div class="tb-icon-btn" title="Bonos y Regalos" onclick="openModal('bonus-modal')">🎁<div class="tb-badge" style="background:#ff6699">2</div></div>
+    <div class="tb-icon-btn" title="Chat" onclick="openModal('chat-modal')">💬</div>
+    <div class="tb-sep"></div>
+    <!-- currencies -->
+    <div id="tb-currencies">
+      <div class="curr" title="Peces - moneda normal"><span class="ci">🐟</span><span class="cv" id="c-peces">1.200</span><span class="cp">+</span></div>
+      <div class="curr" title="Krill - eventos"><span class="ci">🦐</span><span class="cv" id="c-krill">340</span><span class="cp">+</span></div>
+      <div class="curr" title="Piedras - premium"><span class="ci">🪨</span><span class="cv" id="c-piedras">850</span><span class="cp">+</span></div>
+      <div class="curr" title="Perlas - exclusivas"><span class="ci">🦪</span><span class="cv" id="c-perlas">12</span></div>
+    </div>
+    <div class="tb-sep"></div>
+    <div id="tb-profile" onclick="navTo('profile')">
+      <div class="tb-avatar">🐧</div>
+      <div>
+        <div id="tb-pname">—</div>
+        <div style="font-size:9px;color:rgba(255,255,255,.35)" id="tb-rank-line">🐣 Polluelo III</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BODY -->
+  <div id="body">
+    <!-- SIDEBAR -->
+    <div id="sidebar">
+      <div class="snav-label">Juego</div>
+      <div class="snav active" onclick="navTo('home')" data-page="home"><span class="ni">🏠</span>Inicio</div>
+      <div class="snav-sep"></div>
+      <div class="snav-label">Colección</div>
+      <div class="snav" onclick="navTo('guarida')" data-page="guarida"><span class="ni">🎒</span>Guarida Polar</div>
+      <div class="snav-sep"></div>
+      <div class="snav-label">Competitivo</div>
+      <div class="snav" onclick="navTo('dominio')" data-page="dominio"><span class="ni">🏆</span>Dominio Polar</div>
+      <div class="snav" onclick="navTo('misiones')" data-page="misiones"><span class="ni">🎯</span>Misiones</div>
+      <div class="snav-sep"></div>
+      <div class="snav-label">Comunidad</div>
+      <div class="snav" onclick="navTo('colonia')" data-page="colonia"><span class="ni">🐧</span>Colonia</div>
+      <div class="snav" onclick="navTo('tienda')" data-page="tienda"><span class="ni">🛒</span>Tienda</div>
+      <div style="margin-top:auto"></div>
+      <div class="snav-sep"></div>
+      <div class="snav" onclick="navTo('home')" data-page="none"><span class="ni">⚙️</span>Ajustes</div>
+      <div class="snav" style="color:rgba(255,100,100,.5)" onclick="showLogin()"><span class="ni">🚪</span>Cerrar Sesión</div>
+    </div>
+
+    <!-- CONTENT -->
+    <div id="content">
+
+      <!-- HOME -->
+      <div class="page" id="page-home">
+        <div class="page-header">
+          <div><div class="page-title">Bienvenido a PenguBrawl</div><div class="page-sub">Arena Edition · 9 Personajes · v1.0.7.5</div></div>
+        </div>
+        <div class="home-layout">
+          <div class="home-right">
+            <div class="home-friends-box">
+              <div class="home-friends-title">👥 Amigos en línea</div>
+              <div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.05)"><div style="width:7px;height:7px;border-radius:50%;background:#44ff88;flex-shrink:0"></div><span style="font-size:11px;font-weight:700;flex:1">PollarBrawler</span><span style="font-size:9px;color:rgba(255,255,255,.35)">En juego</span></div>
+              <div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.05)"><div style="width:7px;height:7px;border-radius:50%;background:#44ff88;flex-shrink:0"></div><span style="font-size:11px;font-weight:700;flex:1">IceMaster99</span><span style="font-size:9px;color:rgba(255,255,255,.35)">En menú</span></div>
+              <div style="display:flex;align-items:center;gap:8px;padding:5px 0"><div style="width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.2);flex-shrink:0"></div><span style="font-size:11px;font-weight:700;flex:1;color:rgba(255,255,255,.4)">FrostyPengu</span><span style="font-size:9px;color:rgba(255,255,255,.25)">Desconectado</span></div>
+            </div>
+            <button class="home-play-btn" onclick="navTo('modesel')">⚔️ JUGAR</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- MODE SELECT -->
+      <div class="page hidden" id="page-modesel">
+        <div class="page-header"><div><div class="page-title">Seleccionar Modo</div><div class="page-sub">Elige cómo quieres jugar</div></div></div>
+        <div style="display:flex;gap:4px;background:rgba(255,255,255,.05);border-radius:10px;padding:4px;max-width:360px;margin-bottom:24px">
+          <div class="mode-tab" id="mt-offline" onclick="setModeTab('offline')" style="flex:1;padding:9px 20px;border-radius:7px;cursor:pointer;font-size:12px;font-weight:700;color:#fff;background:rgba(80,140,255,.22);text-align:center">🖥️ Sin Conexión</div>
+          <div class="mode-tab" id="mt-online" onclick="setModeTab('online')" style="flex:1;padding:9px 20px;border-radius:7px;cursor:pointer;font-size:12px;font-weight:700;color:rgba(255,255,255,.45);text-align:center">🌐 En Línea</div>
+        </div>
+        <div class="hex-wrap" id="hex-modes"></div>
+      </div>
+
+      <!-- GUARIDA POLAR -->
+      <div class="page hidden" id="page-guarida">
+        <div class="page-header"><div><div class="page-title">🎒 Guarida Polar</div><div class="page-sub">Tu colección de pingüinos y contenido</div></div></div>
+        <div class="guarida-tabs">
+          <div class="gtab active" onclick="setGTab(this,'chars')">Pingüinos</div>
+          <div class="gtab" onclick="setGTab(this,'skins')">Skins</div>
+          <div class="gtab" onclick="setGTab(this,'emotes')">Emoticonos</div>
+          <div class="gtab" onclick="setGTab(this,'icons')">Iconos</div>
+          <div class="gtab" onclick="setGTab(this,'backgrounds')">Fondos</div>
+        </div>
+        <div id="guarida-content"></div>
+      </div>
+
+      <!-- DOMINIO POLAR -->
+      <div class="page hidden" id="page-dominio">
+        <div class="page-header"><div><div class="page-title">🏆 Dominio Polar</div><div class="page-sub">Temporada 1 · Modo Clasificado · Sube de rango</div></div></div>
+        <div id="my-rank-box"></div>
+        <button id="rank-info-btn" onclick="toggleRankPanel()">ℹ️ Ver todos los rangos</button>
+        <div id="rank-all-panel"><div class="rank-grid" id="rank-grid"></div></div>
+        <div style="margin-top:4px;font-size:11px;color:rgba(255,255,255,.35);text-transform:uppercase;letter-spacing:1px;font-weight:700;margin-bottom:10px">🥇 Tabla de Clasificación</div>
+        <div id="leaderboard-list"></div>
+      </div>
+
+      <!-- PROFILE -->
+      <div class="page hidden" id="page-profile">
+        <div class="page-header"><div><div class="page-title">👤 Perfil</div><div class="page-sub">Tu información y estadísticas</div></div></div>
+        <div class="profile-hero">
+          <div class="profile-avatar-big">🐧</div>
+          <div class="profile-info">
+            <h2 id="prof-uname">—</h2>
+            <div class="rank-line"><span style="font-size:18px">🐣</span><span>Polluelo III</span><span style="color:rgba(255,255,255,.25)">·</span><span>45 / 300 pts</span></div>
+            <div style="margin-top:10px;display:flex;gap:10px">
+              <button class="btn btn-s btn-sm">✏️ Editar Avatar</button>
+              <button class="btn btn-s btn-sm">🔗 Compartir Perfil</button>
+            </div>
+          </div>
+        </div>
+        <div class="profile-tabs" id="profile-tabs">
+          <div class="ptab active" onclick="setProfileTab(this,'stats')">📊 Estadísticas</div>
+          <div class="ptab" onclick="setProfileTab(this,'history')">📋 Historial</div>
+          <div class="ptab" onclick="setProfileTab(this,'edit')">✏️ Modificar Info</div>
+          <div class="ptab" onclick="setProfileTab(this,'rep')">⭐ Reputación</div>
+        </div>
+        <div class="profile-content-area" id="profile-area"></div>
+      </div>
+
+      <!-- MISIONES -->
+      <div class="page hidden" id="page-misiones">
+        <div class="page-header"><div><div class="page-title">🎯 Misiones</div><div class="page-sub">Completa misiones · Gana recompensas</div></div></div>
+        <div style="margin-bottom:6px;font-size:10px;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:1px;font-weight:700">Misiones Diarias</div>
+        <div class="mission-list" id="mission-daily"></div>
+        <div style="margin-top:18px;margin-bottom:6px;font-size:10px;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:1px;font-weight:700">Misiones de Temporada</div>
+        <div class="mission-list" id="mission-season"></div>
+      </div>
+
+      <!-- TIENDA -->
+      <div class="page hidden" id="page-tienda">
+        <div class="page-header"><div><div class="page-title">🛒 Tienda</div><div class="page-sub">Obtén objetos, personajes y más</div></div></div>
+        <div class="shop-tabs">
+          <div class="stab" onclick="setShopTab(this,'chars')">Personajes</div>
+          <div class="stab" onclick="setShopTab(this,'skins')">Skins</div>
+          <div class="stab" onclick="setShopTab(this,'eggs')">Nido</div>
+          <div class="stab" onclick="setShopTab(this,'gems')">Piedras</div>
+          <div class="stab" onclick="setShopTab(this,'exchange')">Intercambio</div>
+        </div>
+        <div id="shop-content"></div>
+      </div>
+
+      <!-- COLONIA -->
+      <div class="page hidden" id="page-colonia">
+        <div class="page-header"><div><div class="page-title">🐧 Colonia</div><div class="page-sub">Tu grupo de pingüinos · Compite en conjunto</div></div></div>
+        <div class="colony-hero">
+          <div class="colony-badge">🐧</div>
+          <div class="colony-info">
+            <h3>IceGuard</h3>
+            <div class="cs">Colonia fundada por PolarBrawler · Nivel 4</div>
+            <div class="colony-stats">
+              <div class="cs-box"><div class="cs-val">8</div><div class="cs-lab">Miembros</div></div>
+              <div class="cs-box"><div class="cs-val">4.240</div><div class="cs-lab">Puntos</div></div>
+              <div class="cs-box"><div class="cs-val">#12</div><div class="cs-lab">Ranking</div></div>
+            </div>
+          </div>
+          <div style="margin-left:auto;display:flex;flex-direction:column;gap:6px">
+            <button class="btn btn-s btn-sm">⚙️ Gestionar</button>
+            <button class="btn btn-s btn-sm" style="color:rgba(255,100,100,.6)">🚪 Salir</button>
+          </div>
+        </div>
+        <div style="font-size:10px;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:1px;font-weight:700;margin-bottom:10px">Miembros · 8/15</div>
+        <div class="colony-members" id="colony-members-list"></div>
+      </div>
+
+      <!-- CHAR SELECT -->
+      <div class="page hidden" id="page-charsel">
+        <div class="page-header"><div><div class="page-title">⚔️ Selección de Personajes</div><div class="page-sub">P1: click izquierdo · P2: click derecho</div></div></div>
+        <div class="cs-grid" id="cg"></div>
+        <div class="cs-info" style="margin-top:16px">
+          <div class="sib2"><span>Jugador 1</span><span id="p1s">—</span></div>
+          <div class="sib2"><span>Jugador 2</span><span id="p2s">—</span></div>
+          <button class="btn btn-p" id="fight-btn" onclick="startGame()" disabled style="font-size:15px;padding:10px 28px">¡Pelear! 🥊</button>
+        </div>
+      </div>
+
+    </div><!-- /content -->
+  </div><!-- /body -->
+</div><!-- /dashboard -->
+
+<!-- ═══ GAME WRAP ═══ -->
+<div id="game-wrap" class="hidden">
+  <div id="game-inner">
+    <canvas id="cv"></canvas>
+    <div id="hud"><div class="hudp" id="h1"></div><div class="hudp r" id="h2"></div></div>
+    <div id="statsbar">
+      <div class="statbox"><div class="sname" id="sb1n">P1</div><div class="sval" id="sb1d">0</div><div class="ssub">daño</div></div>
+      <div class="statbox" style="min-width:50px"><div class="sval" id="sb1k" style="font-size:11px">0/0</div><div class="ssub">k/m</div></div>
+      <div class="statbox" style="background:rgba(255,200,50,.07);border-color:rgba(255,200,50,.18)"><div class="sname">FASE</div><div class="sval" id="sbph" style="font-size:11px">—</div></div>
+      <div class="statbox" style="min-width:50px"><div class="sval" id="sb2k" style="font-size:11px">0/0</div><div class="ssub">k/m</div></div>
+      <div class="statbox"><div class="sname" id="sb2n">P2</div><div class="sval" id="sb2d">0</div><div class="ssub">daño</div></div>
+    </div>
+    <div id="ro" class="hidden">
+      <div id="rb">
+        <h2 id="rt">🏆 Winner!</h2><p class="rmsg" id="rs">¡Gran batalla!</p>
+        <table class="fstats" id="fstats"></table>
+        <div class="rbtns">
+          <button class="btn btn-s btn-sm" onclick="exitGame()">Menú</button>
+          <button class="btn btn-s btn-sm" onclick="goCharSel()">Cambiar</button>
+          <button class="btn btn-p btn-sm" onclick="startGame()">Revancha 🔄</button>
+        </div>
+      </div>
+    </div>
+    <div id="game-cbar">
+      <div class="ctrl"><strong>P1 Mover</strong><span class="k">W</span><span class="k">A</span><span class="k">S</span><span class="k">D</span></div>
+      <div class="ctrl"><strong>P1 Skills</strong><span class="k">1</span><span class="k">2</span><span class="k">3</span></div>
+      <div class="ctrl"><strong>P2 Mover</strong><span class="k">↑</span><span class="k">←</span><span class="k">↓</span><span class="k">→</span></div>
+      <div class="ctrl"><strong>P2 Skills</strong><span class="k">I</span><span class="k">O</span><span class="k">P</span></div>
+      <div class="ctrl"><strong>🏠 Base</strong><span style="color:rgba(255,200,80,.58)">Destruye la base</span></div>
+      <div class="ctrl"><strong>ESC</strong><span style="color:rgba(255,180,80,.5)">Salir</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ MODALS ═══ -->
+<!-- Notifications -->
+<div class="modal-overlay hidden" id="notif-modal" onclick="closeModalOutside(event,this)">
+  <div class="modal-box">
+    <div class="modal-title">🔔 Notificaciones</div>
+    <button class="modal-close" onclick="closeModal('notif-modal')">✕</button>
+    <div class="notif-item"><div class="notif-dot"></div><div class="notif-icon">🏹</div><div class="notif-body"><div class="nt">Guerrero disponible</div><div class="ns">Un nuevo pingüino guerrero llega a la arena con lanza dorada y capa épica.</div><div class="nd">Hace 2h</div></div></div>
+    <div class="notif-item"><div class="notif-dot"></div><div class="notif-icon">🌿</div><div class="notif-body"><div class="nt">Notas v1.0.7.5</div><div class="ns">🌿 Naturaleza: nueva maga con tierra, enredaderas y torbellino. Pasivas rediseñadas: Polar ralentiza, Chili quema, Eléctrico electrocuta, Velocista acumula distancia, Guerrero ataca lento a distancia.</div><div class="nd">Hace 1h</div></div></div>
+    <div class="notif-item"><div class="notif-icon">📜</div><div class="notif-body"><div class="nt">Historial de versiones</div><div class="ns">v1.0.6.0 → Dashboard. v1.0.5.0 → Login/Menú. v1.0.4.0 → Fortachón. v1.0.3.0 → Elemental. v1.0.2.0 → Arbustos/Controles.</div><div class="nd">Ayer</div></div></div>
+  </div>
+</div>
+<!-- Egg reveal modal -->
+<div class="egg-modal-overlay hidden" id="egg-modal">
+  <div class="egg-modal-box">
+    <button class="modal-close" onclick="closeModal('egg-modal')" style="position:absolute;top:14px;right:14px">✕</button>
+    <span class="egg-reveal-icon" id="egg-reveal-icon">🐧</span>
+    <div class="egg-reveal-name" id="egg-reveal-name">—</div>
+    <div class="egg-reveal-rar" id="egg-reveal-rar">—</div>
+    <div style="font-size:11px;color:rgba(255,255,255,.4);margin-bottom:18px" id="egg-reveal-desc">—</div>
+    <button class="btn btn-p" onclick="closeModal('egg-modal')">¡Genial! 🎉</button>
+  </div>
+</div>
+
+<!-- Alerts -->
+<div class="modal-overlay hidden" id="alerts-modal" onclick="closeModalOutside(event,this)">
+  <div class="modal-box">
+    <div class="modal-title">⚠️ Alertas del Sistema</div>
+    <button class="modal-close" onclick="closeModal('alerts-modal')">✕</button>
+    <div class="notif-item"><div class="notif-dot" style="background:#ffaa22"></div><div class="notif-icon">🌐</div><div class="notif-body"><div class="nt">Modo Online — Próximamente</div><div class="ns">El servidor multijugador está en desarrollo. Actualmente solo modo offline disponible.</div><div class="nd">Estado: En construcción</div></div></div>
+  </div>
+</div>
+<!-- Bonus -->
+<div class="modal-overlay hidden" id="bonus-modal" onclick="closeModalOutside(event,this)">
+  <div class="modal-box">
+    <div class="modal-title">🎁 Bonos y Regalos</div>
+    <button class="modal-close" onclick="closeModal('bonus-modal')">✕</button>
+    <div class="bonus-card"><div class="bc-icon">🐟</div><div><div class="bc-name">Peces Diarios</div><div class="bc-desc">+200 Peces por tu inicio de sesión de hoy</div></div><div class="bc-claim"><button class="btn btn-gold btn-sm">Reclamar</button></div></div>
+    <div class="bonus-card"><div class="bc-icon">🎊</div><div><div class="bc-name">Bienvenida al Guerrero</div><div class="bc-desc">+150 Peces · +50 Krill por el lanzamiento</div></div><div class="bc-claim"><button class="btn btn-gold btn-sm">Reclamar</button></div></div>
+    <div class="bonus-card" style="opacity:.5"><div class="bc-icon">🏆</div><div><div class="bc-name">Racha de 7 días</div><div class="bc-desc">Inicia sesión 7 días seguidos para desbloquear</div></div><div class="bc-claim"><button class="btn btn-s btn-sm" disabled>3/7 días</button></div></div>
+  </div>
+</div>
+<!-- Chat -->
+<div class="modal-overlay center hidden" id="chat-modal" onclick="closeModalOutside(event,this)">
+  <div class="modal-box wide">
+    <div class="modal-title">💬 Chat Global</div>
+    <button class="modal-close" onclick="closeModal('chat-modal')">✕</button>
+    <div style="height:240px;overflow-y:auto;padding-right:4px" id="chat-msgs">
+      <div class="chat-msg"><div><div class="chat-sender">PollarBrawler</div><div class="chat-bubble">¡Acabo de ganar con Velocista!</div></div></div>
+      <div class="chat-msg"><div><div class="chat-sender">IceMaster99</div><div class="chat-bubble">¿Cuándo sale el modo 3vs3?</div></div></div>
+      <div class="chat-msg mine"><div><div class="chat-bubble">Próximamente según las notas ❄️</div></div></div>
+    </div>
+    <div class="chat-input-row">
+      <input class="chat-input" id="chat-in" placeholder="Escribe un mensaje..." maxlength="120" onkeydown="if(event.key==='Enter')sendChat()">
+      <button class="btn btn-p btn-sm" onclick="sendChat()">Enviar</button>
+    </div>
+  </div>
+</div>
+
+<script src="JS/main.js"></script>
+<script src="JS/ajuste.js"></script>
+<script src="JS/colonia.js"></script>
+<script src="JS/dominio.js"></script>
+<script src="JS/guarida.js"></script>
+<script src="JS/misiones.js"></script>
+<script src="JS/perfil.js"></script>
+<script src="JS/tienda.js"></script>
+<script src="JS/pinguinos/campos.js"></script>
+<script src="JS/pinguinos/chili.js"></script>
+<script src="JS/pinguinos/cuchillas.js"></script>
+<script src="JS/pinguinos/electro.js"></script>
+<script src="JS/pinguinos/elemental.js"></script>
+<script src="JS/pinguinos/fortachon.js"></script>
+<script src="JS/pinguinos/guerrero.js"></script>
+<script src="JS/pinguinos/naturaleza.js"></script>
+<script src="JS/pinguinos/polar.js"></script>
+<script src="JS/pinguinos/velocista.js"></script>
+</body>
+</html>

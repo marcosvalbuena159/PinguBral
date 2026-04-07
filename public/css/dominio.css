@@ -1,0 +1,6 @@
+/* ══════ DOMINIO — RANGOS COLAPSADOS ══════ */
+#rank-info-btn{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:7px 16px;font-size:11px;font-weight:700;color:rgba(255,255,255,.6);cursor:pointer;display:inline-flex;align-items:center;gap:6px;margin-bottom:18px;transition:all .14s;}
+#rank-info-btn:hover{background:rgba(255,255,255,.1);color:#fff;}
+#rank-all-panel{display:none;margin-bottom:20px;}
+#rank-all-panel.open{display:block;}
+

@@ -1,0 +1,17 @@
+/* ══════ COLONIA (CLAN) ══════ */
+.colony-hero{background:rgba(255,255,255,.04);border:1px solid rgba(255,200,80,.12);border-radius:16px;padding:20px;margin-bottom:20px;display:flex;gap:18px;align-items:center;max-width:680px;}
+.colony-badge{font-size:52px;flex-shrink:0;}
+.colony-info h3{font-family:'Fredoka One',cursive;font-size:20px;color:#ffd080;}
+.colony-info .cs{font-size:11px;color:rgba(255,255,255,.4);margin-top:3px;}
+.colony-stats{display:flex;gap:16px;margin-top:10px;}
+.cs-box{text-align:center;}
+.cs-val{font-family:'Fredoka One',cursive;font-size:16px;color:#fff;}
+.cs-lab{font-size:8px;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:.5px;}
+.colony-members{max-width:680px;}
+.cm-item{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.05);}
+.cm-item:last-child{border-bottom:none;}
+.cm-rank{font-size:14px;width:22px;text-align:center;flex-shrink:0;}
+.cm-name{flex:1;font-size:12px;font-weight:700;color:#fff;}
+.cm-role{font-size:9px;color:rgba(255,255,255,.35);background:rgba(255,255,255,.06);border-radius:4px;padding:2px 7px;}
+.cm-pts{font-size:11px;color:#ffd080;font-weight:700;min-width:60px;text-align:right;}
+

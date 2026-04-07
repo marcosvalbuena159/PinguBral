@@ -1,0 +1,112 @@
+/* ══════════════════════════════════════════════════════
+   TIENDA v3 · Wild Rift Style
+   Comparte clases con guarida.css (.g-card, .wr-modal-*, etc.)
+   Solo añade lo específico de tienda
+══════════════════════════════════════════════════════ */
+
+/* ── TABS ─────────────────────────────────────────── */
+.shop-tabs {
+  display:flex; border-bottom:1px solid rgba(200,170,100,.12);
+  margin-bottom:24px; overflow-x:auto; gap:0;
+}
+.stab {
+  padding:11px 18px; cursor:pointer; font-size:11px; font-weight:700;
+  color:rgba(200,170,100,.35); border-bottom:2px solid transparent;
+  transition:all .15s; white-space:nowrap; letter-spacing:.6px; text-transform:uppercase;
+}
+.stab:hover  { color:rgba(200,170,100,.7); }
+.stab.active { color:#c8aa64; border-bottom-color:#c8aa64; }
+
+/* ── PRECIO en tarjeta ────────────────────────────── */
+.g-price {
+  font-size:10px; color:rgba(255,255,255,.55); margin-top:3px;
+  display:flex; align-items:center; gap:3px;
+}
+.g-price strong { color:#c8aa64; font-family:'Fredoka One',cursive; font-size:12px; }
+
+/* ── HUEVO portrait ───────────────────────────────── */
+.egg-portrait-icon {
+  font-size:clamp(32px,5vw,56px);
+  position:relative; z-index:1; line-height:1;
+}
+
+/* ── PROBABILIDADES BAR ───────────────────────────── */
+.shop-prob-bar {
+  display:flex; gap:14px; flex-wrap:wrap; align-items:center;
+  background:rgba(255,255,255,.03); border:1px solid rgba(255,255,255,.06);
+  border-radius:10px; padding:10px 16px; margin-bottom:16px; font-size:10px; font-weight:700;
+}
+.ultra-text { animation:ultraText 3s linear infinite; font-weight:700; font-size:10px; }
+@keyframes ultraText { 0%{color:#ff6b9d;} 25%{color:#c8aa64;} 50%{color:#44ffcc;} 75%{color:#aa44ff;} 100%{color:#ff6b9d;} }
+
+/* ── MODAL HUEVO DETALLE ──────────────────────────── */
+.wr-modal-box.egg-modal-detail { max-width:480px; }
+.egg-detail-top {
+  display:flex; gap:18px; padding:22px 22px 18px;
+  border-bottom:1px solid rgba(200,170,100,.08); align-items:flex-start;
+  border-radius:18px 18px 0 0;
+}
+.egg-detail-icon {
+  font-size:64px; width:90px; height:100px; flex-shrink:0;
+  display:flex; align-items:center; justify-content:center;
+  background:rgba(255,255,255,.04); border:1px solid rgba(200,170,100,.12);
+  border-radius:14px;
+}
+.egg-detail-icon.rar-epica      { border-color:rgba(170,68,255,.4); }
+.egg-detail-icon.rar-legendaria { border-color:rgba(255,208,80,.4); }
+.egg-detail-icon.rar-ultra      { border-color:transparent; animation:ultraBorder 3s linear infinite; }
+.egg-detail-info { flex:1; display:flex; flex-direction:column; gap:7px; }
+.egg-detail-type { font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:.8px; }
+.egg-detail-name { font-family:'Fredoka One',cursive; font-size:20px; color:#fff; }
+.egg-detail-desc { font-size:11px; color:rgba(255,255,255,.45); line-height:1.5; }
+.egg-detail-cost { font-family:'Fredoka One',cursive; font-size:18px; color:#fff; }
+.egg-detail-cost strong { color:#c8aa64; font-size:22px; }
+.egg-detail-locked { font-size:11px; color:rgba(255,150,100,.7); background:rgba(255,100,60,.08); border:1px solid rgba(255,100,60,.15); border-radius:8px; padding:7px 12px; }
+
+/* Pool de recompensas */
+.egg-detail-pool-section { padding:16px 22px 22px; }
+.egg-pool-title { font-size:9px; font-weight:700; color:rgba(200,170,100,.45); text-transform:uppercase; letter-spacing:1px; margin-bottom:10px; }
+.egg-pool-list { display:flex; flex-direction:column; gap:6px; }
+.egg-pool-row { display:flex; align-items:center; gap:10px; background:rgba(255,255,255,.03); border:1px solid rgba(255,255,255,.06); border-radius:9px; padding:8px 12px; }
+.egg-pool-icon { font-size:22px; }
+.egg-pool-name { flex:1; font-size:12px; color:#fff; font-weight:600; }
+.egg-pool-rar  { font-size:9px; font-weight:700; }
+
+/* ── SECTION HEADERS ──────────────────────────────── */
+.shop-section-hdr { margin-bottom:18px; }
+.shop-sec-title { font-family:'Fredoka One',cursive; font-size:20px; color:#fff; }
+.shop-sec-sub   { font-size:11px; color:rgba(255,255,255,.35); margin-top:3px; }
+
+/* ── PRECIO en modal ──────────────────────────────── */
+.wr-shop-price {
+  font-family:'Fredoka One',cursive; font-size:20px; color:#fff; margin:4px 0;
+}
+.wr-shop-price strong { color:#c8aa64; }
+
+/* ── GEMS GRID ────────────────────────────────────── */
+.gems-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; max-width:600px; }
+@media(max-width:600px){ .gems-grid{ grid-template-columns:repeat(2,1fr); } }
+.gem-card {
+  background:rgba(8,10,22,.9); border:1px solid rgba(200,170,100,.12);
+  border-radius:14px; padding:18px 14px; text-align:center;
+  cursor:pointer; transition:all .17s; position:relative;
+}
+.gem-card:hover { border-color:rgba(200,170,100,.35); transform:translateY(-2px); }
+.gem-card.featured { border-color:rgba(200,170,100,.35); background:rgba(200,170,100,.06); }
+.gem-popular { font-size:8px; font-weight:700; color:#c8aa64; letter-spacing:1px; margin-bottom:4px; }
+.gc-icon   { font-size:34px; display:block; margin-bottom:6px; }
+.gc-amount { font-family:'Fredoka One',cursive; font-size:20px; color:#fff; }
+.gc-bonus  { font-size:9px; color:#ffd080; font-weight:700; margin:2px 0 8px; min-height:14px; }
+.gc-price  { font-size:13px; color:rgba(255,255,255,.55); margin-bottom:2px; }
+.gems-note { margin-top:16px; font-size:10px; color:rgba(255,255,255,.22); }
+
+/* ── EXCHANGE ─────────────────────────────────────── */
+.exchange-grid { display:flex; flex-direction:column; gap:10px; max-width:480px; }
+.exch-row { background:rgba(8,10,22,.9); border:1px solid rgba(200,170,100,.1); border-radius:12px; padding:14px 16px; display:flex; align-items:center; gap:12px; }
+.exch-from { font-size:13px; color:rgba(255,255,255,.7); min-width:120px; }
+.exch-from strong, .exch-to strong { color:#c8aa64; }
+.exch-arrow { color:rgba(255,255,255,.25); font-size:16px; }
+.exch-to   { font-size:13px; color:rgba(255,255,255,.7); flex:1; }
+.exch-rate { font-size:9px; color:rgba(255,255,255,.22); }
+.exch-btn  { font-family:'Fredoka One',cursive; font-size:11px; padding:6px 16px; border-radius:8px; border:none; cursor:pointer; background:rgba(200,170,100,.12); color:#c8aa64; border:1px solid rgba(200,170,100,.25); transition:all .13s; }
+.exch-btn:hover { background:rgba(200,170,100,.22); }
