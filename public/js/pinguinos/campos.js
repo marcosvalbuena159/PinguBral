@@ -33,7 +33,7 @@ function cfQ(p,e){
   addFl(p.cx,p.cy-26,'🔮 ¡CAMPO CURVO!','#c0a0ff');
   const{tx,ty}=tgtPos(p,e);
   // Lanzar 3 proyectiles en ángulos curvos convergentes
-  for(let j=0;j<2;j++){
+  for(let j=0;j<3;j++){
     const ang=(j-1)*0.45; // -0.45, 0, +0.45 rad offset
     const dx=tx-p.cx,dy=ty-p.cy,d=Math.sqrt(dx*dx+dy*dy)||1;
     const nx=dx/d*Math.cos(ang)-dy/d*Math.sin(ang);

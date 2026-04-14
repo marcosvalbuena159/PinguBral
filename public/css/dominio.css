@@ -1,6 +1,212 @@
-/* ══════ DOMINIO — RANGOS COLAPSADOS ══════ */
-#rank-info-btn{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:7px 16px;font-size:11px;font-weight:700;color:rgba(255,255,255,.6);cursor:pointer;display:inline-flex;align-items:center;gap:6px;margin-bottom:18px;transition:all .14s;}
-#rank-info-btn:hover{background:rgba(255,255,255,.1);color:#fff;}
-#rank-all-panel{display:none;margin-bottom:20px;}
-#rank-all-panel.open{display:block;}
+/* ══════════════════════════════════════════════════════
+   DOMINIO POLAR v2
+   Layout 2 columnas · Wild Rift aesthetic
+══════════════════════════════════════════════════════ */
 
+/* ── LAYOUT PRINCIPAL ─────────────────────────────── */
+.dominio-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  align-items: start;
+}
+@media (max-width: 860px) {
+  .dominio-layout { grid-template-columns: 1fr; }
+}
+
+/* ══ COLUMNA IZQUIERDA ════════════════════════════════ */
+.dominio-left { display: flex; flex-direction: column; gap: 12px; }
+
+/* ── Tarjeta de rango actual ──────────────────────── */
+.dominio-rank-card {
+  background: linear-gradient(160deg, rgba(14,18,38,.97), rgba(6,8,20,.98));
+  border: 1px solid rgba(200,170,100,.18);
+  border-radius: 18px;
+  padding: 28px 24px 22px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+.dominio-rank-card::before {
+  content: '';
+  position: absolute; top: -60px; left: 50%; transform: translateX(-50%);
+  width: 200px; height: 200px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(200,170,100,.07), transparent 70%);
+  pointer-events: none;
+}
+.mrank-season {
+  font-size: 9px; color: rgba(200,170,100,.45);
+  text-transform: uppercase; letter-spacing: 1.2px; font-weight: 700;
+  margin-bottom: 14px;
+}
+.mrank-icon { font-size: 58px; line-height: 1; margin-bottom: 8px; }
+.mrank-name {
+  font-family: 'Fredoka One', cursive;
+  font-size: 26px; line-height: 1.1; margin-bottom: 10px;
+}
+.mrank-pts {
+  font-family: 'Fredoka One', cursive; font-size: 18px; color: #fff; margin-bottom: 12px;
+}
+.mrank-pts span { font-size: 12px; color: rgba(255,255,255,.4); font-family: inherit; }
+
+/* Barra de progreso */
+.mrank-bar-wrap {
+  width: 100%; height: 8px;
+  background: rgba(255,255,255,.07);
+  border-radius: 4px; overflow: hidden; margin: 0 auto 12px;
+}
+.mrank-bar-fill {
+  height: 100%; border-radius: 4px;
+  transition: width .6s ease;
+  box-shadow: 0 0 8px currentColor;
+}
+
+.mrank-meta {
+  display: flex; justify-content: space-between;
+  font-size: 10px; color: rgba(255,255,255,.35);
+  margin-bottom: 2px;
+}
+.mrank-meta strong { color: rgba(200,170,100,.8); }
+
+/* ── Botón ver rangos ─────────────────────────────── */
+.dominio-rank-toggle {
+  width: 100%;
+  background: rgba(200,170,100,.08);
+  border: 1px solid rgba(200,170,100,.2);
+  border-radius: 10px;
+  padding: 10px 16px;
+  font-size: 12px; font-weight: 700;
+  color: rgba(200,170,100,.75);
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center; gap: 7px;
+  transition: all .15s;
+}
+.dominio-rank-toggle:hover {
+  background: rgba(200,170,100,.14);
+  color: #c8aa64;
+  border-color: rgba(200,170,100,.4);
+}
+
+/* ── Panel de todos los rangos ────────────────────── */
+.dominio-rank-panel { display: none; }
+.dominio-rank-panel.open { display: block; }
+
+.rank-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  padding: 14px 0 4px;
+}
+@media (max-width: 500px) { .rank-grid { grid-template-columns: repeat(2,1fr); } }
+
+.rank-card {
+  background: rgba(8,10,22,.9);
+  border: 1px solid rgba(255,255,255,.07);
+  border-radius: 11px; padding: 12px 8px; text-align: center;
+  transition: all .16s; position: relative;
+}
+.rank-card.current-rank {
+  border-color: rgba(200,170,100,.4);
+  background: rgba(200,170,100,.07);
+  box-shadow: 0 0 18px rgba(200,170,100,.12);
+}
+.rank-card.past-rank { opacity: .55; }
+.r-icon  { font-size: 26px; display: block; margin-bottom: 4px; }
+.r-name  { font-family: 'Fredoka One', cursive; font-size: 11px; margin-bottom: 5px; }
+.r-tiers { display: flex; gap: 3px; justify-content: center; margin-bottom: 5px; }
+.rtier {
+  width: 14px; height: 4px; border-radius: 2px;
+  background: rgba(255,255,255,.1);
+}
+.rtier.done { }
+.rtier.cur  { }
+.r-pts  { font-size: 8px; color: rgba(255,255,255,.3); }
+.r-cur-badge {
+  position: absolute; top: -1px; right: -1px;
+  background: rgba(200,170,100,.9); color: #0a0800;
+  font-size: 7px; font-weight: 700;
+  padding: 2px 6px; border-radius: 0 10px 0 7px;
+  letter-spacing: .4px;
+}
+
+/* ══ COLUMNA DERECHA — LEADERBOARD ════════════════════ */
+.dominio-right { display: flex; flex-direction: column; gap: 0; }
+
+.dominio-lb-header {
+  margin-bottom: 14px;
+}
+.dominio-lb-title {
+  font-family: 'Fredoka One', cursive; font-size: 18px; color: #fff;
+  margin-bottom: 10px;
+}
+
+/* Filtros de rango */
+.dominio-lb-filter-row {
+  display: flex; gap: 5px; flex-wrap: wrap;
+}
+.lb-filt-btn {
+  padding: 5px 10px; font-size: 11px; font-weight: 700;
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 7px; color: rgba(255,255,255,.4);
+  cursor: pointer; transition: all .13s; white-space: nowrap;
+}
+.lb-filt-btn:hover  { border-color: rgba(200,170,100,.3); color: rgba(200,170,100,.8); }
+.lb-filt-btn.active { background: rgba(200,170,100,.12); border-color: rgba(200,170,100,.4); color: #c8aa64; }
+
+/* Encabezado del rango en la tabla */
+.lb-rank-hdr {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 16px 8px;
+}
+.lb-rank-hdr-icon  { font-size: 20px; }
+.lb-rank-hdr-name  { font-family: 'Fredoka One', cursive; font-size: 16px; }
+.lb-rank-hdr-count { font-size: 10px; color: rgba(255,255,255,.3); margin-left: auto; }
+
+/* Tabla */
+.lb-wrap {
+  background: rgba(6,8,18,.92);
+  border: 1px solid rgba(200,170,100,.1);
+  border-radius: 14px; overflow: hidden;
+}
+.lb-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 16px;
+  border-bottom: 1px solid rgba(255,255,255,.04);
+  transition: background .13s;
+}
+.lb-row:last-child { border-bottom: none; }
+.lb-row:hover { background: rgba(255,255,255,.03); }
+.lb-row.lb-row-me {
+  background: rgba(90,150,255,.08);
+  border-left: 3px solid rgba(200,170,100,.5);
+}
+.lb-medal { width: 30px; text-align: center; font-size: 18px; flex-shrink: 0; }
+.lb-pos   { font-size: 12px; color: rgba(255,255,255,.3); }
+.lb-player-info { flex: 1; min-width: 0; }
+.lb-player-name {
+  font-size: 13px; font-weight: 700; color: #fff;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  display: flex; align-items: center; gap: 5px;
+}
+.lb-player-name.lb-me { color: #7ab8ff; }
+.lb-you-tag {
+  font-size: 8px; font-weight: 700; background: rgba(90,150,255,.25);
+  color: #7ab8ff; border: 1px solid rgba(90,150,255,.35);
+  border-radius: 4px; padding: 1px 5px; letter-spacing: .4px;
+}
+.lb-player-rank {
+  font-size: 9px; color: rgba(255,255,255,.3); margin-top: 2px;
+}
+.lb-pts {
+  font-family: 'Fredoka One', cursive; font-size: 15px;
+  text-align: right; flex-shrink: 0;
+}
+.lb-pts-label { font-size: 9px; color: rgba(255,255,255,.3); font-family: inherit; }
+
+.lb-empty {
+  padding: 40px; text-align: center;
+  font-size: 13px; color: rgba(255,255,255,.25);
+  background: rgba(6,8,18,.9); border: 1px solid rgba(255,255,255,.06);
+  border-radius: 14px;
+}

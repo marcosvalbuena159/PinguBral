@@ -45,7 +45,7 @@
       <input class="linput" id="rp2" type="password" placeholder="Confirmar contraseña" maxlength="32" autocomplete="off">
       <div class="lerr" id="reg-err"></div>
       <button class="btn btn-gold" style="font-size:15px;padding:12px 0;width:100%" onclick="doReg()">✨ Crear Cuenta</button>
-      <button class="btn btn-s btn-sm" onclick="showLogin()">← Volver al login</button>
+      <button class="btn btn-s btn-sm" onclick="doLogout()">← Volver al login</button>
     </div>
   </div>
 </div>
@@ -85,6 +85,7 @@
     <div id="sidebar">
       <div class="snav-label">Juego</div>
       <div class="snav active" onclick="navTo('home')" data-page="home"><span class="ni">🏠</span>Inicio</div>
+      <div class="snav" onclick="navTo('modesel')" data-page="jugar"><span class="ni">⚔️</span>Jugar</div>
       <div class="snav-sep"></div>
       <div class="snav-label">Colección</div>
       <div class="snav" onclick="navTo('guarida')" data-page="guarida"><span class="ni">🎒</span>Guarida Polar</div>
@@ -98,7 +99,7 @@
       <div class="snav" onclick="navTo('tienda')" data-page="tienda"><span class="ni">🛒</span>Tienda</div>
       <div style="margin-top:auto"></div>
       <div class="snav-sep"></div>
-      <div class="snav" onclick="navTo('home')" data-page="none"><span class="ni">⚙️</span>Ajustes</div>
+      <div class="snav" onclick="navTo('ajustes')" data-page="ajustes"><span class="ni">⚙️</span>Ajustes</div>
       <div class="snav" style="color:rgba(255,100,100,.5)" onclick="showLogin()"><span class="ni">🚪</span>Cerrar Sesión</div>
     </div>
 
@@ -106,20 +107,48 @@
     <div id="content">
 
       <!-- HOME -->
-      <div class="page" id="page-home">
-        <div class="page-header">
-          <div><div class="page-title">Bienvenido a PenguBrawl</div><div class="page-sub">Arena Edition · 9 Personajes · v1.0.7.5</div></div>
+      <div class="page home-fullscreen" id="page-home">
+        <!-- Fondo: imagen o gradiente por defecto -->
+        <div class="home-bg" id="home-bg">
+          <div class="home-bg-overlay"></div>
         </div>
-        <div class="home-layout">
-          <div class="home-right">
-            <div class="home-friends-box">
-              <div class="home-friends-title">👥 Amigos en línea</div>
-              <div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.05)"><div style="width:7px;height:7px;border-radius:50%;background:#44ff88;flex-shrink:0"></div><span style="font-size:11px;font-weight:700;flex:1">PollarBrawler</span><span style="font-size:9px;color:rgba(255,255,255,.35)">En juego</span></div>
-              <div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.05)"><div style="width:7px;height:7px;border-radius:50%;background:#44ff88;flex-shrink:0"></div><span style="font-size:11px;font-weight:700;flex:1">IceMaster99</span><span style="font-size:9px;color:rgba(255,255,255,.35)">En menú</span></div>
-              <div style="display:flex;align-items:center;gap:8px;padding:5px 0"><div style="width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.2);flex-shrink:0"></div><span style="font-size:11px;font-weight:700;flex:1;color:rgba(255,255,255,.4)">FrostyPengu</span><span style="font-size:9px;color:rgba(255,255,255,.25)">Desconectado</span></div>
+        <!-- Título top-left -->
+        <div class="home-title-block">
+          <div class="home-game-title">PenguBrawl</div>
+          <div class="home-game-sub">Arena Edition · 9 Personajes · v1.0.7.5</div>
+        </div>
+        <!-- Botón cambiar fondo (arriba derecha) -->
+        <button class="home-bg-btn" onclick="document.getElementById('home-bg-input').click()" title="Cambiar imagen de fondo">🖼️</button>
+        <input type="file" id="home-bg-input" accept="image/*" style="display:none" onchange="setHomeBg(this)">
+        <!-- Panel inferior derecha: amigos + botón jugar -->
+        <div class="home-bottom-right">
+          <!-- Amigos -->
+          <div class="home-friends-panel" id="home-friends-panel">
+            <div class="home-friends-header">
+              <span class="home-friends-label">👥 Amigos</span>
+              <span class="home-online-count" id="home-online-count">2 en línea</span>
             </div>
-            <button class="home-play-btn" onclick="navTo('modesel')">⚔️ JUGAR</button>
+            <div class="home-friend-row online">
+              <div class="home-friend-dot online"></div>
+              <span class="home-friend-name">PollarBrawler</span>
+              <span class="home-friend-status">En juego</span>
+              <button class="home-friend-invite" title="Invitar">+</button>
+            </div>
+            <div class="home-friend-row online">
+              <div class="home-friend-dot online"></div>
+              <span class="home-friend-name">IceMaster99</span>
+              <span class="home-friend-status">En menú</span>
+              <button class="home-friend-invite" title="Invitar">+</button>
+            </div>
+            <div class="home-friend-row offline">
+              <div class="home-friend-dot offline"></div>
+              <span class="home-friend-name">FrostyPengu</span>
+              <span class="home-friend-status">Desconectado</span>
+              <button class="home-friend-invite" disabled title="No disponible">—</button>
+            </div>
           </div>
+          <!-- Botón JUGAR -->
+          <button class="home-play-btn" onclick="navTo('modesel')">⚔️ JUGAR</button>
         </div>
       </div>
 
@@ -143,17 +172,13 @@
           <div class="gtab" onclick="setGTab(this,'icons')">Iconos</div>
           <div class="gtab" onclick="setGTab(this,'backgrounds')">Fondos</div>
         </div>
-        <div id="guarida-content"></div>
+        <div id="guarida-content"><div id="guarida-inner"></div></div>
       </div>
 
       <!-- DOMINIO POLAR -->
       <div class="page hidden" id="page-dominio">
         <div class="page-header"><div><div class="page-title">🏆 Dominio Polar</div><div class="page-sub">Temporada 1 · Modo Clasificado · Sube de rango</div></div></div>
-        <div id="my-rank-box"></div>
-        <button id="rank-info-btn" onclick="toggleRankPanel()">ℹ️ Ver todos los rangos</button>
-        <div id="rank-all-panel"><div class="rank-grid" id="rank-grid"></div></div>
-        <div style="margin-top:4px;font-size:11px;color:rgba(255,255,255,.35);text-transform:uppercase;letter-spacing:1px;font-weight:700;margin-bottom:10px">🥇 Tabla de Clasificación</div>
-        <div id="leaderboard-list"></div>
+        <!-- buildDominio() construye el layout completo aquí -->
       </div>
 
       <!-- PROFILE -->
@@ -192,13 +217,14 @@
       <div class="page hidden" id="page-tienda">
         <div class="page-header"><div><div class="page-title">🛒 Tienda</div><div class="page-sub">Obtén objetos, personajes y más</div></div></div>
         <div class="shop-tabs">
-          <div class="stab" onclick="setShopTab(this,'chars')">Personajes</div>
+          <div class="stab active" onclick="setShopTab(this,'chars')">Personajes</div>
           <div class="stab" onclick="setShopTab(this,'skins')">Skins</div>
           <div class="stab" onclick="setShopTab(this,'eggs')">Nido</div>
+          <div class="stab" onclick="setShopTab(this,'krill')">🦐 Krill</div>
           <div class="stab" onclick="setShopTab(this,'gems')">Piedras</div>
           <div class="stab" onclick="setShopTab(this,'exchange')">Intercambio</div>
         </div>
-        <div id="shop-content"></div>
+        <div id="shop-content"><div id="shop-inner"></div></div>
       </div>
 
       <!-- COLONIA -->
@@ -233,6 +259,12 @@
           <div class="sib2"><span>Jugador 2</span><span id="p2s">—</span></div>
           <button class="btn btn-p" id="fight-btn" onclick="startGame()" disabled style="font-size:15px;padding:10px 28px">¡Pelear! 🥊</button>
         </div>
+      </div>
+
+      <!-- AJUSTES -->
+      <div class="page hidden" id="page-ajustes">
+        <div class="page-header"><div><div class="page-title">⚙️ Ajustes</div><div class="page-sub">Personaliza tu experiencia de juego</div></div></div>
+        <!-- buildAjustes() construye el contenido aquí -->
       </div>
 
     </div><!-- /content -->
@@ -316,21 +348,57 @@
 </div>
 <!-- Chat -->
 <div class="modal-overlay center hidden" id="chat-modal" onclick="closeModalOutside(event,this)">
-  <div class="modal-box wide">
-    <div class="modal-title">💬 Chat Global</div>
-    <button class="modal-close" onclick="closeModal('chat-modal')">✕</button>
-    <div style="height:240px;overflow-y:auto;padding-right:4px" id="chat-msgs">
-      <div class="chat-msg"><div><div class="chat-sender">PollarBrawler</div><div class="chat-bubble">¡Acabo de ganar con Velocista!</div></div></div>
-      <div class="chat-msg"><div><div class="chat-sender">IceMaster99</div><div class="chat-bubble">¿Cuándo sale el modo 3vs3?</div></div></div>
-      <div class="chat-msg mine"><div><div class="chat-bubble">Próximamente según las notas ❄️</div></div></div>
+  <div class="modal-box wide chat-modal-box">
+    <div class="chat-modal-header">
+      <div class="chat-tabs">
+        <button class="chat-tab active" id="ctab-global" onclick="setChatTab('global')">🌐 Global</button>
+        <button class="chat-tab" id="ctab-amigos" onclick="setChatTab('amigos')">👥 Amigos</button>
+      </div>
+      <button class="modal-close" onclick="closeModal('chat-modal')" style="position:relative;top:0;right:0">✕</button>
     </div>
-    <div class="chat-input-row">
-      <input class="chat-input" id="chat-in" placeholder="Escribe un mensaje..." maxlength="120" onkeydown="if(event.key==='Enter')sendChat()">
-      <button class="btn btn-p btn-sm" onclick="sendChat()">Enviar</button>
+    <!-- Global (solo admins escriben) -->
+    <div class="chat-panel" id="chat-panel-global">
+      <div class="chat-admin-notice">🛡️ Solo los administradores pueden escribir en el chat global</div>
+      <div class="chat-msgs-wrap" id="chat-msgs-global">
+        <div class="chat-msg"><div><div class="chat-sender chat-admin-badge">🛡️ Admin · PolarDev</div><div class="chat-bubble">¡Bienvenidos a PenguBrawl v1.0.7.5! Nuevo personaje Naturaleza disponible 🌿</div></div></div>
+        <div class="chat-msg"><div><div class="chat-sender chat-admin-badge">🛡️ Admin · PolarDev</div><div class="chat-bubble">Mantenimiento programado el sábado a las 3 AM. El servidor estará caído ~30 min.</div></div></div>
+        <div class="chat-msg"><div><div class="chat-sender chat-admin-badge">🛡️ Admin · IceBalance</div><div class="chat-bubble">Chili recibe nerf de velocidad en el próximo parche. Polar buff de armadura +15%.</div></div></div>
+      </div>
+      <!-- Input solo si es admin, oculto por defecto -->
+      <div class="chat-input-row" id="chat-global-input" style="display:none">
+        <input class="chat-input" id="chat-in-global" placeholder="Mensaje global (admin)..." maxlength="200" onkeydown="if(event.key==='Enter')sendChatGlobal()">
+        <button class="btn btn-p btn-sm" onclick="sendChatGlobal()">Enviar</button>
+      </div>
+    </div>
+    <!-- Amigos -->
+    <div class="chat-panel hidden" id="chat-panel-amigos">
+      <div class="chat-friends-list" id="chat-friends-list">
+        <div class="chat-friend-item active-chat" onclick="openFriendChat('PollarBrawler')">
+          <div class="cfi-dot online"></div>
+          <div class="cfi-info"><div class="cfi-name">PollarBrawler</div><div class="cfi-last">¡Acabo de ganar con Velocista!</div></div>
+          <div class="cfi-time">2m</div>
+        </div>
+        <div class="chat-friend-item" onclick="openFriendChat('IceMaster99')">
+          <div class="cfi-dot online"></div>
+          <div class="cfi-info"><div class="cfi-name">IceMaster99</div><div class="cfi-last">¿Cuándo sale el modo 3vs3?</div></div>
+          <div class="cfi-time">5m</div>
+        </div>
+        <div class="chat-friend-item" onclick="openFriendChat('FrostyPengu')">
+          <div class="cfi-dot offline"></div>
+          <div class="cfi-info"><div class="cfi-name">FrostyPengu</div><div class="cfi-last">Desconectado</div></div>
+          <div class="cfi-time">3h</div>
+        </div>
+      </div>
+      <div class="chat-friend-convo" id="chat-friend-convo">
+        <div class="chat-convo-empty">← Selecciona un amigo para chatear</div>
+      </div>
     </div>
   </div>
 </div>
-
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="JS/supabase-client.js"></script>
+<script src="JS/auth.js"></script>
+<script src="JS/perfil-monedero.js"></script>
 <script src="JS/main.js"></script>
 <script src="JS/ajuste.js"></script>
 <script src="JS/colonia.js"></script>

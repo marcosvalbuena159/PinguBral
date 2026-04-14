@@ -27,7 +27,7 @@ function defaultUser(u){
     totalDmg:0,
     totalKills:0,
     // Rango
-    rankPts:45,
+    rankPts:145,
   };
 }
 
@@ -140,6 +140,7 @@ function syncOwnedChars(){
   Object.keys(CHARS_DEF).forEach(k=>{CHARS_DEF[k].owned=owned.includes(k);});
 }
 function enterDash(name){
+  if(typeof initPerfilMonedero === 'function') initPerfilMonedero();
   document.getElementById('login').classList.add('hidden');document.getElementById('register').classList.add('hidden');
   document.getElementById('dashboard').classList.remove('hidden');
   document.getElementById('tb-pname').textContent=name;document.getElementById('prof-uname').textContent=name;
@@ -150,7 +151,7 @@ function enterDash(name){
 // ═══════════════════════════════════════════════════════
 //  NAVIGATION — dashboard pages
 // ═══════════════════════════════════════════════════════
-const PAGES=['home','modesel','guarida','dominio','profile','charsel','misiones','tienda','colonia'];
+const PAGES=['home','modesel','guarida','dominio','profile','charsel','misiones','tienda','colonia','ajustes'];
 function navTo(page){
   PAGES.forEach(p=>{
     const el=document.getElementById('page-'+p);if(el){if(p===page)el.classList.remove('hidden');else el.classList.add('hidden');}
@@ -159,13 +160,15 @@ function navTo(page){
   document.querySelectorAll('.snav').forEach(n=>{n.classList.remove('active');if(n.dataset.page===page)n.classList.add('active');});
   // build page content
   if(page==='modesel')buildHexModes('offline');
-  else if(page==='guarida')buildGuarida('nido');
+  else if(page==='guarida')buildGuarida('chars');
   else if(page==='dominio')buildDominio();
   else if(page==='profile')buildProfile('stats');
   else if(page==='charsel')buildCharSel();
   else if(page==='misiones')buildMisiones();
-  else if(page==='tienda')buildShop('featured');
+  else if(page==='tienda')buildShop('chars');
   else if(page==='colonia')buildColonia();
+  else if(page==='ajustes')buildAjustes();
+  if(page==='home')loadHomeBg();
 }
 function exitGame(){document.getElementById('game-wrap').classList.add('hidden');navTo('home');}
 function goCharSel(){document.getElementById('game-wrap').classList.add('hidden');navTo('charsel');}
@@ -176,11 +179,81 @@ function goCharSel(){document.getElementById('game-wrap').classList.add('hidden'
 function openModal(id){document.getElementById(id).classList.remove('hidden');}
 function closeModal(id){document.getElementById(id).classList.add('hidden');}
 function closeModalOutside(e,el){if(e.target===el)el.classList.add('hidden');}
-function sendChat(){
-  const inp=document.getElementById('chat-in');const txt=inp.value.trim();if(!txt)return;
-  const msgs=document.getElementById('chat-msgs');
-  const div=document.createElement('div');div.className='chat-msg mine';div.innerHTML=`<div><div class="chat-bubble">${txt}</div></div>`;
-  msgs.appendChild(div);msgs.scrollTop=msgs.scrollHeight;inp.value='';
+// ── CHAT v2 ─────────────────────────────────────────────
+let currentChatTab='global';
+let currentFriendChat=null;
+const ADMIN_USERS=['PolarDev','IceBalance','PenguAdmin'];
+
+function setChatTab(tab){
+  currentChatTab=tab;
+  document.querySelectorAll('.chat-tab').forEach(t=>t.classList.remove('active'));
+  const btn=document.getElementById('ctab-'+tab); if(btn)btn.classList.add('active');
+  document.querySelectorAll('.chat-panel').forEach(p=>p.classList.add('hidden'));
+  const panel=document.getElementById('chat-panel-'+tab); if(panel)panel.classList.remove('hidden');
+  if(tab==='global'){
+    const isAdmin=ADMIN_USERS.includes(currentUser);
+    const inp=document.getElementById('chat-global-input');
+    if(inp)inp.style.display=isAdmin?'flex':'none';
+  }
+}
+function sendChatGlobal(){
+  const inp=document.getElementById('chat-in-global'); if(!inp)return;
+  const txt=inp.value.trim(); if(!txt)return;
+  const wrap=document.getElementById('chat-msgs-global'); if(!wrap)return;
+  const div=document.createElement('div'); div.className='chat-msg mine';
+  div.innerHTML=`<div><div class="chat-sender chat-admin-badge">🛡️ Admin · ${currentUser}</div><div class="chat-bubble">${txt}</div></div>`;
+  wrap.appendChild(div); wrap.scrollTop=wrap.scrollHeight; inp.value='';
+}
+function sendChat(){ sendChatGlobal(); }
+
+function openFriendChat(name){
+  currentFriendChat=name;
+  document.querySelectorAll('.chat-friend-item').forEach(el=>el.classList.remove('active-chat'));
+  document.querySelectorAll('.chat-friend-item').forEach(el=>{if(el.querySelector('.cfi-name')?.textContent===name)el.classList.add('active-chat');});
+  const convo=document.getElementById('chat-friend-convo'); if(!convo)return;
+  const friendMsgs={
+    'PollarBrawler':['¡Acabo de ganar con Velocista!','¿Quieres una partida?'],
+    'IceMaster99':['¿Cuándo sale el modo 3vs3?'],
+    'FrostyPengu':[],
+  };
+  const msgs=friendMsgs[name]||[];
+  convo.innerHTML=`<div class="chat-convo-header">💬 ${name}</div>
+    <div class="chat-convo-msgs" id="convo-msgs-${name}">${msgs.length===0
+      ?'<div class="chat-convo-empty">Sin mensajes aún. ¡Di hola! 👋</div>'
+      :msgs.map(m=>`<div class="chat-msg"><div><div class="chat-sender">${name}</div><div class="chat-bubble">${m}</div></div></div>`).join('')}
+    </div>
+    <div class="chat-input-row" style="padding:10px 12px;border-top:1px solid rgba(255,255,255,.06)">
+      <input class="chat-input" id="chat-in-friend" placeholder="Mensaje para ${name}..." maxlength="120" onkeydown="if(event.key==='Enter')sendFriendMsg('${name}')">
+      <button class="btn btn-p btn-sm" onclick="sendFriendMsg('${name}')">Enviar</button>
+    </div>`;
+  const w=document.getElementById('convo-msgs-'+name); if(w)w.scrollTop=w.scrollHeight;
+}
+function sendFriendMsg(name){
+  const inp=document.getElementById('chat-in-friend'); if(!inp)return;
+  const txt=inp.value.trim(); if(!txt)return;
+  const wrap=document.getElementById('convo-msgs-'+name); if(!wrap)return;
+  const emp=wrap.querySelector('.chat-convo-empty'); if(emp)emp.remove();
+  const div=document.createElement('div'); div.className='chat-msg mine';
+  div.innerHTML=`<div><div class="chat-bubble">${txt}</div></div>`;
+  wrap.appendChild(div); wrap.scrollTop=wrap.scrollHeight; inp.value='';
+}
+// ── FONDO HOME ───────────────────────────────────────────
+function setHomeBg(input){
+  const file=input.files[0]; if(!file)return;
+  const reader=new FileReader();
+  reader.onload=(e)=>{
+    const bg=document.getElementById('home-bg');
+    if(bg){bg.style.backgroundImage=`url('${e.target.result}')`;bg.style.backgroundSize='cover';bg.style.backgroundPosition='center';}
+    try{localStorage.setItem('pb_home_bg',e.target.result);}catch(ex){}
+    showToast('Fondo actualizado','#5ab0ff');
+  };
+  reader.readAsDataURL(file);
+}
+function loadHomeBg(){
+  try{
+    const saved=localStorage.getItem('pb_home_bg');
+    if(saved){const bg=document.getElementById('home-bg');if(bg){bg.style.backgroundImage=`url('${saved}')`;bg.style.backgroundSize='cover';bg.style.backgroundPosition='center';}}
+  }catch(e){}
 }
 
 // ═══════════════════════════════════════════════════════
@@ -255,7 +328,7 @@ const CHARS={
   electrico:{name:'Eléctrico',icon:'🐧',cls:'Mago · Rango Largo',color:'#ffe844',hat:'#5a4400',body:'#2a1e00',hp:175,spd:3.2,pills:[{t:'Rango',c:'#aa8800'},{t:'Escalado',c:'#886600'}],skills:[{e:'⚡',n:'Electrochoque',cd:240,col:'#ffe844'},{e:'🔵',n:'Forma Energía',cd:160,col:'#88ffff'},{e:'🌩️',n:'Tormenta Eléc.',cd:480,col:'#ffff88'}],passive:'Acumula cargas al estar cerca (máx 5)',p1k:['1','2','3'],p2k:['i','o','p']},
   elemental:{name:'Elemental',icon:'🐧',cls:'Mago Control · Rango Medio',color:'#ff7730',hat:'#001a40',body:'#001028',hp:200,spd:3.0,pills:[{t:'Control',c:'#cc5500'},{t:'Mixto',c:'#006688'}],skills:[{e:'🔥',n:'Explosión Fuego',cd:150,col:'#ff6622'},{e:'💧',n:'Rayo de Agua',cd:200,col:'#44aaff'},{e:'🧊',n:'Congelación',cd:420,col:'#aaddff'}],passive:'Ralentiza al enemigo cercano (150px)',p1k:['1','2','3'],p2k:['i','o','p']},
   fortachon:{name:'Fortachón',icon:'🐧',cls:'Guerrero · Rango Corto',color:'#e8a020',hat:'#3a2000',body:'#1a0e00',hp:280,spd:2.4,pills:[{t:'Tanque++',c:'#996600'},{t:'Cuerpo a Cuerpo',c:'#664400'}],skills:[{e:'💪',n:'Modo Bestia',cd:240,col:'#e8a020'},{e:'🪝',n:'Agarre',cd:200,col:'#cc8800'},{e:'💥',n:'Salto Brutal',cd:360,col:'#ff6600'}],passive:'Pisotón: 4 dmg/0.5s, alcanza base en 90px',p1k:['1','2','3'],p2k:['i','o','p']},
-  velocista:{name:'Velocista',icon:'🐧',cls:'Asesino · Rango Medio',color:'#44ffcc',hat:'#003322',body:'#001a12',hp:170,spd:4.2,pills:[{t:'Veloz++',c:'#00aa77'},{t:'Evasión',c:'#008855'}],skills:[{e:'🌀',n:'Esquiva',cd:720,col:'#44ffcc'},{e:'💫',n:'Dash Choque',cd:180,col:'#22ddaa'},{e:'⚡',n:'Furia Veloz',cd:420,col:'#aaffee'}],passive:'+25% vel. permanente, rastro de velocidad',p1k:['1','2','3'],p2k:['i','o','p']},
+  velocista:{name:'Velocista',icon:'🐧',cls:'Asesino · Rango Medio',color:'#44ffcc',hat:'#003322',body:'#001a12',hp:170,spd:4.2,pills:[{t:'Veloz++',c:'#00aa77'},{t:'Evasión',c:'#008855'}],skills:[{e:'🌀',n:'Esquiva',cd:420,col:'#44ffcc'},{e:'💫',n:'Dash Choque',cd:180,col:'#22ddaa'},{e:'⚡',n:'Furia Veloz',cd:420,col:'#aaffee'}],passive:'+25% vel. permanente, rastro de velocidad',p1k:['1','2','3'],p2k:['i','o','p']},
   guerrero:{name:'Guerrero',icon:'🐧',cls:'Guerrero · Rango Corto',color:'#ffd080',hat:'#2a1800',body:'#180e00',hp:210,spd:2.9,pills:[{t:'Guerrero',c:'#cc9900'},{t:'Lanza',c:'#aa7700'}],
     skills:[
       {e:'🏹',n:'Lanza Rápida',    cd:90, col:'#ffd080'},  // fast short-range spear
@@ -679,4 +752,7 @@ document.addEventListener('keydown',e=>{
 });
 document.addEventListener('keyup',e=>{keys[e.key.toLowerCase()]=false;});
 document.addEventListener('contextmenu',e=>e.preventDefault());
-window.addEventListener('load',()=>showLogin());
+window.addEventListener('load',()=>{
+  if(typeof initAuth === 'function') initAuth();
+  else showLogin();
+});

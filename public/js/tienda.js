@@ -62,6 +62,7 @@ function buildShop(tab) {
   else if (currentShopTab === 'eggs')     buildShopEggs(inner);
   else if (currentShopTab === 'gems')     buildShopGems(inner);
   else if (currentShopTab === 'exchange') buildShopExchange(inner);
+  else if (currentShopTab === 'krill')    buildShopKrill(inner);
 }
 
 // ── Helpers compartidos con guarida ───────────────────
@@ -425,3 +426,66 @@ function sMkOv() {
   ov.onclick=e=>{if(e.target===ov)ov.remove();}; return ov;
 }
 function sShowOv(ov){ document.body.appendChild(ov); requestAnimationFrame(()=>ov.classList.add('visible')); }
+
+// ══ KRILL ════════════════════════════════════════════
+function buildShopKrill(cont) {
+  const hdr = document.createElement('div'); hdr.className='shop-section-hdr';
+  hdr.innerHTML=`<div class="shop-sec-title">Krill 🦐</div>
+    <div class="shop-sec-sub">El Krill se gana jugando · Cómpralo con Peces 🐟 o gánalo en eventos y misiones</div>`;
+  cont.appendChild(hdr);
+
+  // Comprar krill con peces
+  const buyTitle = document.createElement('div');
+  buyTitle.className = 'krill-earn-title'; buyTitle.style.marginBottom='12px';
+  buyTitle.textContent = '💰 Comprar Krill con Peces';
+  cont.appendChild(buyTitle);
+
+  const grid = document.createElement('div'); grid.className='krill-shop-grid';
+  [
+    { icon:'🦐',    name:'Puñado de Krill',  amount:50,   bonus:0,   price:500,  pxIcon:'🐟', featured:false, desc:'Para pequeñas compras en la tienda' },
+    { icon:'🦐🦐',  name:'Bolsa de Krill',   amount:150,  bonus:15,  price:1400, pxIcon:'🐟', featured:false, desc:'La compra más popular entre jugadores' },
+    { icon:'🦐🦐🦐',name:'Saco de Krill',    amount:400,  bonus:60,  price:3500, pxIcon:'🐟', featured:true,  desc:'Mejor relación calidad-precio' },
+    { icon:'🌊',    name:'Mar de Krill',     amount:1000, bonus:200, price:8000, pxIcon:'🐟', featured:false, desc:'Para compradores frecuentes de cosméticos' },
+  ].forEach(p => {
+    const total = p.amount + p.bonus;
+    const c = document.createElement('div'); c.className='krill-card'+(p.featured?' featured':'');
+    c.innerHTML=`${p.featured?'<div class="krill-popular-tag">⭐ MÁS POPULAR</div>':''}
+      <span class="krill-card-icon">${p.icon}</span>
+      <div class="krill-card-name">${p.name}</div>
+      <div class="krill-card-desc">${p.desc}</div>
+      <div class="krill-card-amount">🦐 ${p.amount.toLocaleString('es')}</div>
+      <div class="krill-card-bonus">${p.bonus?'+'+p.bonus+' GRATIS 🎁':'&nbsp;'}</div>
+      <div class="krill-card-price">🐟 ${p.price.toLocaleString('es')} Peces</div>
+      <button class="wr-shop-btn" style="width:100%" onclick="doKrillBuy(${p.price},${total},this)">
+        Comprar · 🐟 ${p.price.toLocaleString('es')}
+      </button>`;
+    grid.appendChild(c);
+  });
+  cont.appendChild(grid);
+
+  // Cómo ganar krill gratis
+  const earnSec = document.createElement('div'); earnSec.className='krill-earn-section';
+  earnSec.innerHTML=`<div class="krill-earn-title">🎯 Cómo ganar Krill gratis</div>
+    <div class="krill-earn-grid">
+      <div class="krill-earn-item"><div class="kei-icon">⚔️</div><div class="kei-info"><div class="kei-name">Partidas clasificadas</div><div class="kei-desc">Gana puntos de clasificación</div></div><div class="kei-reward">+5–20 🦐</div></div>
+      <div class="krill-earn-item"><div class="kei-icon">🎯</div><div class="kei-info"><div class="kei-name">Misiones diarias</div><div class="kei-desc">Completa misiones cada día</div></div><div class="kei-reward">+10–50 🦐</div></div>
+      <div class="krill-earn-item"><div class="kei-icon">📅</div><div class="kei-info"><div class="kei-name">Inicio de sesión diario</div><div class="kei-desc">Racha de 7 días = bonus</div></div><div class="kei-reward">+5 🦐 / día</div></div>
+      <div class="krill-earn-item"><div class="kei-icon">🏆</div><div class="kei-info"><div class="kei-name">Torneos de temporada</div><div class="kei-desc">Top 10 reciben Krill extra</div></div><div class="kei-reward">+100–500 🦐</div></div>
+      <div class="krill-earn-item"><div class="kei-icon">🌊</div><div class="kei-info"><div class="kei-name">Eventos especiales</div><div class="kei-desc">Disponibles cada semana</div></div><div class="kei-reward">Variable 🦐</div></div>
+      <div class="krill-earn-item"><div class="kei-icon">👥</div><div class="kei-info"><div class="kei-name">Invitar amigos</div><div class="kei-desc">Por cada amigo que registres</div></div><div class="kei-reward">+30 🦐</div></div>
+    </div>`;
+  cont.appendChild(earnSec);
+}
+
+function doKrillBuy(price, krillAmount, btn) {
+  const u = getCurrUser(); if(!u){showToast('⚠️ Inicia sesión','#ff8844');return;}
+  if(u.peces < price){showToast('❌ No tienes suficiente 🐟 (necesitas '+price.toLocaleString('es')+')','#ff4444');return;}
+  u.peces -= price;
+  u.krill = (u.krill||0) + krillAmount;
+  saveCurrUser(u);
+  updateTopbarCurrencies();
+  showToast('🦐 +'+krillAmount+' Krill obtenido!','#66dd44');
+  btn.textContent='✅ Comprado';
+  btn.disabled=true;
+  setTimeout(()=>{btn.textContent='Comprar · 🐟 '+price.toLocaleString('es');btn.disabled=false;},3000);
+}

@@ -1,17 +1,1273 @@
-/* ══════ COLONIA (CLAN) ══════ */
-.colony-hero{background:rgba(255,255,255,.04);border:1px solid rgba(255,200,80,.12);border-radius:16px;padding:20px;margin-bottom:20px;display:flex;gap:18px;align-items:center;max-width:680px;}
-.colony-badge{font-size:52px;flex-shrink:0;}
-.colony-info h3{font-family:'Fredoka One',cursive;font-size:20px;color:#ffd080;}
-.colony-info .cs{font-size:11px;color:rgba(255,255,255,.4);margin-top:3px;}
-.colony-stats{display:flex;gap:16px;margin-top:10px;}
-.cs-box{text-align:center;}
-.cs-val{font-family:'Fredoka One',cursive;font-size:16px;color:#fff;}
-.cs-lab{font-size:8px;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:.5px;}
-.colony-members{max-width:680px;}
-.cm-item{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.05);}
-.cm-item:last-child{border-bottom:none;}
-.cm-rank{font-size:14px;width:22px;text-align:center;flex-shrink:0;}
-.cm-name{flex:1;font-size:12px;font-weight:700;color:#fff;}
-.cm-role{font-size:9px;color:rgba(255,255,255,.35);background:rgba(255,255,255,.06);border-radius:4px;padding:2px 7px;}
-.cm-pts{font-size:11px;color:#ffd080;font-weight:700;min-width:60px;text-align:right;}
+/* ═══════════════════════════════════════════════════════
+   COLONIA — Layout & Componentes
+═══════════════════════════════════════════════════════ */
 
+/* ── PAGE SHELL ─────────────────────────────────────── */
+#page-colonia {
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.col-header {
+  padding: 20px 26px 0;
+  flex-shrink: 0;
+}
+
+.col-body {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+  padding: 14px 26px 20px;
+  gap: 14px;
+}
+
+/* ── COLUMNA IZQUIERDA — MI COLONIA ─────────────────── */
+.col-panel {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.col-panel-left  { flex: 1.15; min-width: 0; }
+.col-panel-right { flex: 1; min-width: 0; }
+
+.col-divider {
+  width: 1px;
+  background: linear-gradient(180deg, transparent, rgba(255,255,255,.08) 20%, rgba(255,255,255,.08) 80%, transparent);
+  flex-shrink: 0;
+}
+
+/* ── PANEL TITLE ─────────────────────────────────────── */
+.cpanel-title {
+  font-family: 'Fredoka One', cursive;
+  font-size: 14px;
+  color: rgba(255,255,255,.7);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 11px;
+  flex-shrink: 0;
+}
+
+.cpanel-title .cpt-icon {
+  width: 28px; height: 28px;
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px;
+}
+
+.cpt-blue  { background: rgba(80,160,255,.15); border: 1px solid rgba(80,160,255,.22); }
+.cpt-gold  { background: rgba(255,200,80,.12); border: 1px solid rgba(255,200,80,.2);  }
+.cpt-red   { background: rgba(255,80,80,.12);  border: 1px solid rgba(255,80,80,.2);   }
+
+/* ── HERO CARD ───────────────────────────────────────── */
+.clan-hero-card {
+  background: rgba(255,255,255,.03);
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 14px;
+  padding: 14px 16px;
+  margin-bottom: 10px;
+  flex-shrink: 0;
+  position: relative;
+  overflow: hidden;
+}
+
+.clan-hero-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 90% 50%, rgba(80,160,255,.07) 0%, transparent 60%);
+  pointer-events: none;
+}
+
+.clan-hero-top {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Escudo del clan */
+.clan-shield {
+  width: 52px; height: 52px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, rgba(20,50,120,.6), rgba(10,30,80,.8));
+  border: 2px solid rgba(80,160,255,.3);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 26px;
+  flex-shrink: 0;
+  cursor: pointer;
+  transition: all .18s;
+  box-shadow: 0 0 18px rgba(80,160,255,.12);
+  position: relative;
+}
+
+.clan-shield:hover {
+  border-color: rgba(80,160,255,.6);
+  box-shadow: 0 0 28px rgba(80,160,255,.25);
+  transform: scale(1.04);
+}
+
+.clan-shield-edit {
+  position: absolute;
+  bottom: -3px; right: -3px;
+  width: 16px; height: 16px;
+  border-radius: 50%;
+  background: rgba(20,40,80,.9);
+  border: 1px solid rgba(80,160,255,.4);
+  font-size: 8px;
+  display: flex; align-items: center; justify-content: center;
+}
+
+.clan-meta { flex: 1; min-width: 0; }
+
+.clan-name-row {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.clan-name {
+  font-family: 'Fredoka One', cursive;
+  font-size: 18px;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.clan-level-badge {
+  font-family: 'Fredoka One', cursive;
+  font-size: 9px;
+  padding: 2px 8px;
+  border-radius: 20px;
+  background: linear-gradient(135deg, rgba(255,200,80,.2), rgba(200,140,10,.15));
+  border: 1px solid rgba(255,200,80,.25);
+  color: #ffd080;
+  white-space: nowrap;
+}
+
+.clan-desc {
+  font-size: 9px;
+  color: rgba(255,255,255,.32);
+  margin-top: 3px;
+  line-height: 1.4;
+}
+
+.clan-founder {
+  font-size: 8px;
+  color: rgba(255,255,255,.2);
+  margin-top: 2px;
+}
+
+/* Stats row */
+.clan-stats-row {
+  display: flex;
+  gap: 0;
+  margin-top: 12px;
+  background: rgba(255,255,255,.03);
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,.06);
+}
+
+.clan-stat {
+  flex: 1;
+  text-align: center;
+  padding: 8px 4px;
+  border-right: 1px solid rgba(255,255,255,.05);
+}
+
+.clan-stat:last-child { border-right: none; }
+
+.cs-val {
+  font-family: 'Fredoka One', cursive;
+  font-size: 15px;
+  color: #fff;
+}
+
+.cs-lab {
+  font-size: 7px;
+  color: rgba(255,255,255,.3);
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  margin-top: 1px;
+}
+
+/* Botones hero */
+.clan-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 12px;
+  flex-wrap: wrap;
+}
+
+.btn-clan {
+  font-family: 'Fredoka One', cursive;
+  font-size: 10px;
+  padding: 5px 12px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  transition: all .15s;
+  display: flex; align-items: center; gap: 4px;
+}
+
+.btn-clan:hover { filter: brightness(1.12); transform: scale(1.03); }
+.btn-clan:active { transform: scale(.97); }
+
+.btn-clan-blue  { background: rgba(80,160,255,.18); border: 1px solid rgba(80,160,255,.3); color: #7ab8ff; }
+.btn-clan-gold  { background: rgba(255,200,80,.15); border: 1px solid rgba(255,200,80,.25); color: #ffd080; }
+.btn-clan-red   { background: rgba(255,80,80,.1);   border: 1px solid rgba(255,80,80,.2);  color: rgba(255,130,130,.8); }
+
+/* ── TABLA MIEMBROS ──────────────────────────────────── */
+.clan-members-wrap {
+  flex: 1;
+  overflow-y: auto;
+  background: rgba(255,255,255,.02);
+  border: 1px solid rgba(255,255,255,.06);
+  border-radius: 12px;
+}
+
+.clan-members-wrap::-webkit-scrollbar { width: 3px; }
+.clan-members-wrap::-webkit-scrollbar-thumb { background: rgba(255,255,255,.1); border-radius: 3px; }
+
+.cm-header {
+  display: grid;
+  grid-template-columns: 24px 1fr 80px 70px 60px;
+  gap: 8px;
+  padding: 7px 14px;
+  border-bottom: 1px solid rgba(255,255,255,.06);
+  font-size: 7px;
+  color: rgba(255,255,255,.28);
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  font-weight: 700;
+  position: sticky;
+  top: 0;
+  background: rgba(10,15,30,.95);
+  backdrop-filter: blur(6px);
+  z-index: 2;
+}
+
+.cm-row {
+  display: grid;
+  grid-template-columns: 24px 1fr 80px 70px 60px;
+  gap: 8px;
+  padding: 8px 14px;
+  border-bottom: 1px solid rgba(255,255,255,.04);
+  align-items: center;
+  transition: background .15s;
+}
+
+.cm-row:last-child { border-bottom: none; }
+.cm-row:hover { background: rgba(255,255,255,.03); }
+.cm-row.cm-me { background: rgba(80,160,255,.05); }
+.cm-row.cm-me:hover { background: rgba(80,160,255,.08); }
+
+.cm-pos {
+  font-size: 10px;
+  color: rgba(255,255,255,.25);
+  text-align: center;
+  font-weight: 700;
+}
+
+.cm-pos.gold   { color: #ffd080; }
+.cm-pos.silver { color: rgba(200,220,255,.5); }
+.cm-pos.bronze { color: #c87840; }
+
+.cm-identity {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.cm-avatar {
+  width: 26px; height: 26px;
+  border-radius: 8px;
+  background: rgba(255,255,255,.06);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px;
+  flex-shrink: 0;
+  border: 1px solid rgba(255,255,255,.08);
+}
+
+.cm-avatar.av-me {
+  border-color: rgba(80,160,255,.35);
+  background: rgba(80,160,255,.08);
+}
+
+.cm-uname {
+  font-size: 11px;
+  font-weight: 700;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cm-uname.me-label { color: #7ab8ff; }
+
+.cm-role-badge {
+  font-size: 8px;
+  padding: 2px 7px;
+  border-radius: 20px;
+  font-weight: 700;
+  white-space: nowrap;
+  text-align: center;
+}
+
+.role-lider     { background: rgba(255,200,80,.15); border: 1px solid rgba(255,200,80,.25); color: #ffd080; }
+.role-asistente { background: rgba(80,160,255,.15); border: 1px solid rgba(80,160,255,.25); color: #7ab8ff; }
+.role-miembro   { background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.1); color: rgba(255,255,255,.45); }
+
+.cm-pts {
+  font-family: 'Fredoka One', cursive;
+  font-size: 12px;
+  color: #ffd080;
+  text-align: right;
+}
+
+.cm-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.cm-action-btn {
+  font-size: 9px;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.1);
+  color: rgba(255,255,255,.4);
+  cursor: pointer;
+  transition: all .14s;
+}
+
+.cm-action-btn:hover {
+  background: rgba(255,255,255,.1);
+  color: #fff;
+}
+
+/* ── REQUERIMIENTOS ──────────────────────────────────── */
+.clan-req-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+
+.req-chip {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 20px;
+  padding: 4px 10px;
+  font-size: 9px;
+  color: rgba(255,255,255,.4);
+}
+
+.req-chip span { color: rgba(255,255,255,.7); font-weight: 700; }
+
+/* ── SIN COLONIA: BUSCAR / CREAR ─────────────────────── */
+.no-clan-screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  gap: 10px;
+  padding: 20px;
+}
+
+.no-clan-icon {
+  font-size: 56px;
+  filter: drop-shadow(0 0 20px rgba(80,160,255,.3));
+}
+
+.no-clan-title {
+  font-family: 'Fredoka One', cursive;
+  font-size: 20px;
+  color: #fff;
+  text-align: center;
+}
+
+.no-clan-sub {
+  font-size: 11px;
+  color: rgba(255,255,255,.35);
+  text-align: center;
+  max-width: 280px;
+  line-height: 1.5;
+}
+
+.no-clan-btns {
+  display: flex;
+  gap: 10px;
+  margin-top: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+/* Buscador de colonias */
+.clan-search-box {
+  background: rgba(255,255,255,.03);
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 14px;
+  padding: 14px;
+  margin-top: 12px;
+  width: 100%;
+  max-width: 420px;
+}
+
+.clan-search-input {
+  width: 100%;
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.1);
+  border-radius: 8px;
+  padding: 9px 13px;
+  color: #fff;
+  font-size: 12px;
+  font-family: 'Nunito', sans-serif;
+  outline: none;
+  transition: border-color .18s;
+  margin-bottom: 10px;
+}
+
+.clan-search-input:focus { border-color: rgba(80,160,255,.4); }
+
+.clan-search-result {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(255,255,255,.07);
+  border-radius: 10px;
+  margin-bottom: 6px;
+  transition: all .15s;
+  cursor: pointer;
+}
+
+.clan-search-result:hover {
+  background: rgba(80,160,255,.07);
+  border-color: rgba(80,160,255,.2);
+}
+
+.csr-icon { font-size: 22px; flex-shrink: 0; }
+
+.csr-info { flex: 1; min-width: 0; }
+
+.csr-name {
+  font-family: 'Fredoka One', cursive;
+  font-size: 13px;
+  color: #fff;
+}
+
+.csr-meta {
+  font-size: 9px;
+  color: rgba(255,255,255,.3);
+  margin-top: 1px;
+}
+
+.csr-join {
+  font-family: 'Fredoka One', cursive;
+  font-size: 10px;
+  padding: 4px 11px;
+  border-radius: 7px;
+  background: rgba(80,160,255,.18);
+  border: 1px solid rgba(80,160,255,.28);
+  color: #7ab8ff;
+  cursor: pointer;
+  transition: all .15s;
+  flex-shrink: 0;
+}
+
+.csr-join:hover { filter: brightness(1.15); transform: scale(1.04); }
+
+/* Modal crear colonia */
+.create-clan-form {
+  background: rgba(255,255,255,.03);
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 14px;
+  padding: 16px;
+  margin-top: 12px;
+  width: 100%;
+  max-width: 420px;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.ccf-label {
+  font-size: 9px;
+  color: rgba(255,255,255,.35);
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  font-weight: 700;
+  margin-bottom: 3px;
+}
+
+.ccf-input {
+  width: 100%;
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.1);
+  border-radius: 8px;
+  padding: 8px 12px;
+  color: #fff;
+  font-size: 12px;
+  font-family: 'Nunito', sans-serif;
+  outline: none;
+  transition: border-color .18s;
+}
+
+.ccf-input:focus { border-color: rgba(80,160,255,.4); }
+
+.ccf-cost {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10px;
+  color: rgba(255,255,255,.45);
+  padding: 8px 0 2px;
+  border-top: 1px solid rgba(255,255,255,.06);
+}
+
+.ccf-cost strong { color: #fff; }
+
+/* Emojis escudo picker */
+.shield-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.sp-opt {
+  width: 34px; height: 34px;
+  border-radius: 9px;
+  background: rgba(255,255,255,.05);
+  border: 1px solid rgba(255,255,255,.08);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all .15s;
+}
+
+.sp-opt:hover { background: rgba(255,255,255,.1); transform: scale(1.08); }
+.sp-opt.selected { border-color: rgba(80,160,255,.55); background: rgba(80,160,255,.15); box-shadow: 0 0 8px rgba(80,160,255,.2); }
+
+/* ═══════════════════════════════════════════════════════
+   COLUMNA DERECHA — BATALLA DE COLONIAS + TABLA
+═══════════════════════════════════════════════════════ */
+
+/* Tabs derecha */
+.col-right-tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 11px;
+  flex-shrink: 0;
+}
+
+.col-rtab {
+  font-family: 'Fredoka One', cursive;
+  font-size: 11px;
+  padding: 5px 13px;
+  border-radius: 8px;
+  cursor: pointer;
+  color: rgba(255,255,255,.35);
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(255,255,255,.07);
+  transition: all .15s;
+  user-select: none;
+}
+
+.col-rtab:hover { color: rgba(255,255,255,.65); background: rgba(255,255,255,.08); }
+.col-rtab.active { color: #ffd080; background: rgba(255,200,80,.12); border-color: rgba(255,200,80,.28); }
+
+/* ── BATALLA ─────────────────────────────────────────── */
+.battle-card {
+  background: rgba(255,255,255,.03);
+  border: 1px solid rgba(255,255,255,.07);
+  border-radius: 14px;
+  overflow: hidden;
+  margin-bottom: 10px;
+  flex-shrink: 0;
+}
+
+.battle-banner {
+  background: linear-gradient(135deg, #0b1e50 0%, #1a3070 50%, #0b1e50 100%);
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  position: relative;
+  overflow: hidden;
+}
+
+.battle-banner::after {
+  content: '⚔️';
+  position: absolute;
+  font-size: 80px;
+  opacity: .05;
+  top: 50%; left: 50%;
+  transform: translate(-50%,-50%);
+  pointer-events: none;
+}
+
+.battle-clan-side {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+}
+
+.battle-clan-side.right { align-items: flex-end; }
+
+.battle-shield {
+  font-size: 28px;
+  filter: drop-shadow(0 2px 8px rgba(0,0,0,.5));
+}
+
+.battle-clan-name {
+  font-family: 'Fredoka One', cursive;
+  font-size: 12px;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 90px;
+}
+
+.battle-pts {
+  font-family: 'Fredoka One', cursive;
+  font-size: 18px;
+  color: #ffd080;
+}
+
+.battle-vs {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.vs-text {
+  font-family: 'Fredoka One', cursive;
+  font-size: 22px;
+  color: rgba(255,255,255,.4);
+}
+
+.battle-timer {
+  font-size: 8px;
+  color: rgba(255,255,255,.3);
+  background: rgba(255,255,255,.06);
+  border-radius: 20px;
+  padding: 2px 8px;
+  white-space: nowrap;
+}
+
+/* Barras de batalla */
+.battle-bars {
+  padding: 12px 16px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.battle-bar-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.battle-bar-track {
+  flex: 1;
+  height: 8px;
+  background: rgba(255,255,255,.06);
+  border-radius: 4px;
+  overflow: hidden;
+  display: flex;
+}
+
+.bbt-left {
+  height: 100%;
+  background: linear-gradient(90deg, #3a7fff, #60aaff);
+  border-radius: 4px 0 0 4px;
+  transition: width .5s ease;
+}
+
+.bbt-right {
+  height: 100%;
+  background: linear-gradient(90deg, #ff4444, #ff8844);
+  border-radius: 0 4px 4px 0;
+  margin-left: auto;
+  transition: width .5s ease;
+}
+
+.battle-bar-label {
+  font-size: 9px;
+  color: rgba(255,255,255,.3);
+  min-width: 28px;
+  text-align: center;
+}
+
+.battle-phase-badge {
+  text-align: center;
+  font-size: 9px;
+  color: rgba(255,255,255,.35);
+  margin-top: 4px;
+}
+
+.bpb-live {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(255,60,60,.15);
+  border: 1px solid rgba(255,60,60,.25);
+  border-radius: 20px;
+  padding: 2px 9px;
+  color: #ff8888;
+  animation: pulseBattle 2.5s ease-in-out infinite;
+}
+
+@keyframes pulseBattle {
+  0%,100% { opacity: 1; }
+  50% { opacity: .55; }
+}
+
+/* Historial de batallas */
+.battle-history-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  background: rgba(255,255,255,.025);
+  border: 1px solid rgba(255,255,255,.05);
+  border-radius: 10px;
+  margin-bottom: 5px;
+}
+
+.bhi-result {
+  font-family: 'Fredoka One', cursive;
+  font-size: 10px;
+  padding: 2px 8px;
+  border-radius: 20px;
+  flex-shrink: 0;
+}
+
+.bhi-win  { background: rgba(68,255,136,.12); border: 1px solid rgba(68,255,136,.22); color: #44ff88; }
+.bhi-loss { background: rgba(255,80,80,.1);   border: 1px solid rgba(255,80,80,.2);  color: #ff8888; }
+.bhi-draw { background: rgba(255,200,80,.1);  border: 1px solid rgba(255,200,80,.2); color: #ffd080; }
+
+.bhi-info { flex: 1; min-width: 0; }
+
+.bhi-vs {
+  font-size: 11px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.bhi-score {
+  font-size: 9px;
+  color: rgba(255,255,255,.32);
+  margin-top: 1px;
+}
+
+.bhi-pts {
+  font-family: 'Fredoka One', cursive;
+  font-size: 12px;
+  color: #ffd080;
+  flex-shrink: 0;
+}
+
+/* ── TABLA DE CLANES ─────────────────────────────────── */
+.clan-league-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+  flex-shrink: 0;
+}
+
+.clan-league-badge {
+  font-family: 'Fredoka One', cursive;
+  font-size: 11px;
+  padding: 4px 12px;
+  border-radius: 20px;
+  background: linear-gradient(135deg, rgba(255,200,80,.18), rgba(200,140,10,.12));
+  border: 1px solid rgba(255,200,80,.28);
+  color: #ffd080;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.clan-table-scroll {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.clan-table-scroll::-webkit-scrollbar { width: 3px; }
+.clan-table-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,.1); border-radius: 3px; }
+
+.ct-row {
+  display: grid;
+  grid-template-columns: 28px 1fr 48px 70px 52px;
+  gap: 6px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  margin-bottom: 4px;
+  align-items: center;
+  transition: background .15s;
+  border: 1px solid transparent;
+}
+
+.ct-row:hover { background: rgba(255,255,255,.03); border-color: rgba(255,255,255,.06); }
+
+.ct-row.ct-me {
+  background: rgba(80,160,255,.06);
+  border-color: rgba(80,160,255,.18);
+}
+
+.ct-row.ct-promotion {
+  border-left: 2px solid #44ff88;
+  padding-left: 10px;
+}
+
+.ct-row.ct-relegation {
+  border-left: 2px solid rgba(255,80,80,.6);
+  padding-left: 10px;
+}
+
+.ct-pos-num {
+  font-family: 'Fredoka One', cursive;
+  font-size: 13px;
+  text-align: center;
+  color: rgba(255,255,255,.28);
+}
+
+.ct-pos-num.top1 { color: #ffd080; }
+.ct-pos-num.top2 { color: rgba(200,220,255,.5); }
+.ct-pos-num.top3 { color: #c87840; }
+
+.ct-identity {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.ct-shield { font-size: 18px; flex-shrink: 0; }
+
+.ct-name {
+  font-size: 11px;
+  font-weight: 700;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ct-members {
+  font-size: 9px;
+  color: rgba(255,255,255,.3);
+  text-align: center;
+}
+
+.ct-pts {
+  font-family: 'Fredoka One', cursive;
+  font-size: 12px;
+  color: #ffd080;
+  text-align: right;
+}
+
+.ct-trend {
+  font-size: 11px;
+  text-align: center;
+}
+
+/* Leyenda liga */
+.league-legend {
+  display: flex;
+  gap: 12px;
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255,255,255,.05);
+  flex-wrap: wrap;
+  flex-shrink: 0;
+}
+
+.ll-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 8px;
+  color: rgba(255,255,255,.3);
+}
+
+.ll-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+}
+
+/* ── GESTIÓN MODAL INLINE ────────────────────────────── */
+.manage-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,2,12,.9);
+  backdrop-filter: blur(8px);
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 14px;
+}
+
+.manage-modal {
+  background: rgba(10,18,50,.97);
+  border: 1px solid rgba(80,160,255,.2);
+  border-radius: 16px;
+  padding: 22px;
+  width: 360px;
+  max-height: 85%;
+  overflow-y: auto;
+  position: relative;
+}
+
+.manage-modal::-webkit-scrollbar { width: 3px; }
+.manage-modal::-webkit-scrollbar-thumb { background: rgba(255,255,255,.1); border-radius: 3px; }
+
+.mm-title {
+  font-family: 'Fredoka One', cursive;
+  font-size: 17px;
+  color: #fff;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.mm-close {
+  width: 26px; height: 26px;
+  border-radius: 7px;
+  background: rgba(255,255,255,.07);
+  border: 1px solid rgba(255,255,255,.1);
+  color: rgba(255,255,255,.5);
+  cursor: pointer;
+  font-size: 12px;
+  display: flex; align-items: center; justify-content: center;
+  transition: all .14s;
+}
+
+.mm-close:hover { background: rgba(255,80,80,.15); color: #ff8888; }
+
+.mm-section {
+  margin-bottom: 14px;
+}
+
+.mm-label {
+  font-size: 8px;
+  color: rgba(255,255,255,.3);
+  text-transform: uppercase;
+  letter-spacing: .8px;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+.mm-input {
+  width: 100%;
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.1);
+  border-radius: 8px;
+  padding: 9px 12px;
+  color: #fff;
+  font-size: 12px;
+  font-family: 'Nunito', sans-serif;
+  outline: none;
+  transition: border-color .18s;
+}
+
+.mm-input:focus { border-color: rgba(80,160,255,.45); }
+
+.mm-select {
+  width: 100%;
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.1);
+  border-radius: 8px;
+  padding: 8px 12px;
+  color: #fff;
+  font-size: 12px;
+  font-family: 'Nunito', sans-serif;
+  outline: none;
+  cursor: pointer;
+  appearance: none;
+}
+
+.mm-select option { background: #0a1232; }
+
+/* Danger zone */
+.mm-danger {
+  background: rgba(255,60,60,.05);
+  border: 1px solid rgba(255,60,60,.15);
+  border-radius: 10px;
+  padding: 12px;
+}
+
+.mm-danger-title {
+  font-size: 9px;
+  color: rgba(255,130,130,.6);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  margin-bottom: 8px;
+}
+
+/* ── ANIMACIONES ─────────────────────────────────────── */
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.ct-row { animation: slideUp .3s ease both; }
+.ct-row:nth-child(1)  { animation-delay: .02s; }
+.ct-row:nth-child(2)  { animation-delay: .04s; }
+.ct-row:nth-child(3)  { animation-delay: .06s; }
+.ct-row:nth-child(4)  { animation-delay: .08s; }
+.ct-row:nth-child(5)  { animation-delay: .10s; }
+.ct-row:nth-child(6)  { animation-delay: .12s; }
+.ct-row:nth-child(7)  { animation-delay: .14s; }
+.ct-row:nth-child(8)  { animation-delay: .16s; }
+.ct-row:nth-child(9)  { animation-delay: .18s; }
+.ct-row:nth-child(10) { animation-delay: .20s; }
+/* ═══════════════════════════════════════════════════════
+   NUEVOS ESTILOS — Aportes de guerra · Tabla liga 10-10-10
+═══════════════════════════════════════════════════════ */
+
+/* ── FÓRMULA BADGE ───────────────────────────────────── */
+.war-formula-badge {
+  font-size: 8px;
+  background: rgba(80,160,255,.12);
+  border: 1px solid rgba(80,160,255,.22);
+  border-radius: 20px;
+  padding: 2px 10px;
+  color: #7ab8ff;
+  white-space: nowrap;
+}
+
+/* ── LISTA DE APORTES ────────────────────────────────── */
+.contrib-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  padding: 9px 11px;
+  border-radius: 11px;
+  margin-bottom: 5px;
+  background: rgba(255,255,255,.025);
+  border: 1px solid rgba(255,255,255,.05);
+  transition: all .17s;
+  animation: slideUp .3s ease both;
+}
+
+.contrib-row:hover {
+  background: rgba(255,255,255,.045);
+  border-color: rgba(255,255,255,.1);
+  transform: translateX(2px);
+}
+
+.contrib-row.contrib-me {
+  background: rgba(80,160,255,.06);
+  border-color: rgba(80,160,255,.18);
+}
+
+.contrib-pos {
+  font-family: 'Fredoka One', cursive;
+  font-size: 13px;
+  min-width: 22px;
+  text-align: center;
+  flex-shrink: 0;
+  margin-top: 1px;
+  color: rgba(255,255,255,.35);
+}
+
+.contrib-avatar {
+  width: 30px; height: 30px;
+  border-radius: 9px;
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.08);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 15px;
+  flex-shrink: 0;
+}
+
+.contrib-me .contrib-avatar {
+  background: rgba(80,160,255,.1);
+  border-color: rgba(80,160,255,.25);
+}
+
+.contrib-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.contrib-name-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 5px;
+}
+
+.contrib-name {
+  font-size: 11px;
+  font-weight: 700;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.contrib-name-me { color: #7ab8ff; }
+
+.contrib-kda {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 9px;
+  font-weight: 700;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.contrib-ratio {
+  font-size: 8px;
+  padding: 1px 6px;
+  border-radius: 20px;
+  background: rgba(255,255,255,.06);
+  margin-left: 2px;
+}
+
+/* Barra de aporte */
+.contrib-bar-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 3px;
+}
+
+.contrib-bar-track {
+  flex: 1;
+  height: 5px;
+  background: rgba(255,255,255,.06);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.contrib-bar-fill {
+  height: 100%;
+  border-radius: 3px;
+  background: linear-gradient(90deg, #3a7fff, #60aaff);
+  transition: width .5s ease;
+}
+
+.contrib-me .contrib-bar-fill {
+  background: linear-gradient(90deg, #44cc88, #44ff88);
+}
+
+.contrib-pts-label {
+  font-family: 'Fredoka One', cursive;
+  font-size: 12px;
+  flex-shrink: 0;
+  min-width: 46px;
+  text-align: right;
+}
+
+.contrib-games {
+  font-size: 8px;
+  color: rgba(255,255,255,.22);
+  margin-top: 1px;
+}
+
+/* ── TABLA LIGA — ZONAS ──────────────────────────────── */
+
+/* Chips resumen de zonas */
+.league-zones-summary {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+  flex-shrink: 0;
+}
+
+.lzs-chip {
+  font-size: 8px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 20px;
+  border: 1px solid;
+  white-space: nowrap;
+}
+
+/* Separador de zona */
+.league-zone-sep {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 4px;
+}
+
+.lzs-line {
+  flex: 1;
+  height: 1px;
+  background: rgba(255,255,255,.07);
+}
+
+.lzs-label {
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: .5px;
+  text-transform: uppercase;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* Header de columnas tabla */
+.ct-header-row {
+  display: grid;
+  grid-template-columns: 28px 1fr 48px 70px 36px;
+  gap: 6px;
+  padding: 5px 12px;
+  font-size: 7px;
+  color: rgba(255,255,255,.25);
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+/* Override grid para la nueva columna de tendencia más angosta */
+.ct-row {
+  grid-template-columns: 28px 1fr 48px 70px 36px !important;
+}
+
+/* Animación entrada filas */
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.contrib-row:nth-child(1)  { animation-delay: .02s; }
+.contrib-row:nth-child(2)  { animation-delay: .04s; }
+.contrib-row:nth-child(3)  { animation-delay: .06s; }
+.contrib-row:nth-child(4)  { animation-delay: .08s; }
+.contrib-row:nth-child(5)  { animation-delay: .10s; }
+.contrib-row:nth-child(6)  { animation-delay: .12s; }
+.contrib-row:nth-child(7)  { animation-delay: .14s; }
+.contrib-row:nth-child(8)  { animation-delay: .16s; }

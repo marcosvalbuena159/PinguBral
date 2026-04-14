@@ -1,0 +1,567 @@
+/* ═══════════════════════════════════════════════════════
+   MISIONES & EVENTOS — Layout principal
+═══════════════════════════════════════════════════════ */
+#page-misiones {
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.mis-header {
+  padding: 22px 28px 0;
+  flex-shrink: 0;
+}
+
+.mis-body {
+  display: flex;
+  flex: 1;
+  gap: 0;
+  overflow: hidden;
+  padding: 16px 28px 20px;
+  gap: 16px;
+}
+
+/* ═══ COLUMNA IZQUIERDA — MISIONES ═══ */
+.mis-col {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.mis-col-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  flex-shrink: 0;
+}
+
+.mis-col-title {
+  font-family: 'Fredoka One', cursive;
+  font-size: 15px;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mis-col-title .mct-icon {
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+}
+
+.mis-col-title.missions .mct-icon {
+  background: linear-gradient(135deg, rgba(100, 180, 255, .18), rgba(60, 120, 255, .22));
+  border: 1px solid rgba(100, 180, 255, .25);
+}
+
+.mis-col-title.events .mct-icon {
+  background: linear-gradient(135deg, rgba(255, 170, 50, .18), rgba(255, 100, 30, .22));
+  border: 1px solid rgba(255, 170, 50, .25);
+}
+
+/* Reset timer */
+.mis-reset-badge {
+  font-size: 9px;
+  color: rgba(255,255,255,.3);
+  background: rgba(255,255,255,.05);
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 20px;
+  padding: 3px 9px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Tabs diario / temporada */
+.mis-tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 10px;
+  flex-shrink: 0;
+}
+
+.mis-tab {
+  font-family: 'Fredoka One', cursive;
+  font-size: 11px;
+  padding: 5px 13px;
+  border-radius: 8px;
+  cursor: pointer;
+  color: rgba(255,255,255,.35);
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(255,255,255,.07);
+  transition: all .15s;
+  user-select: none;
+}
+
+.mis-tab:hover {
+  color: rgba(255,255,255,.65);
+  background: rgba(255,255,255,.08);
+}
+
+.mis-tab.active-mis {
+  color: #7ab8ff;
+  background: rgba(100, 180, 255, .12);
+  border-color: rgba(100, 180, 255, .3);
+}
+
+.mis-tab.active-ev {
+  color: #ffb850;
+  background: rgba(255, 170, 50, .12);
+  border-color: rgba(255, 170, 50, .3);
+}
+
+/* Lista scroll */
+.mis-list {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  padding-right: 4px;
+}
+
+.mis-list::-webkit-scrollbar { width: 3px; }
+.mis-list::-webkit-scrollbar-track { background: transparent; }
+.mis-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,.1); border-radius: 3px; }
+
+/* ═══ TARJETA DE MISIÓN ═══ */
+.mission-card {
+  background: rgba(255,255,255,.03);
+  border: 1px solid rgba(255,255,255,.07);
+  border-radius: 13px;
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  transition: all .18s;
+  position: relative;
+  overflow: hidden;
+}
+
+.mission-card::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  border-radius: 3px 0 0 3px;
+  background: rgba(100, 180, 255, .4);
+  opacity: 0;
+  transition: opacity .18s;
+}
+
+.mission-card:hover {
+  background: rgba(255,255,255,.055);
+  border-color: rgba(255,255,255,.12);
+  transform: translateX(2px);
+}
+
+.mission-card:hover::before {
+  opacity: 1;
+}
+
+.mission-card.mc-done {
+  background: rgba(68, 255, 136, .03);
+  border-color: rgba(68, 255, 136, .12);
+}
+
+.mission-card.mc-done::before {
+  opacity: 1;
+  background: linear-gradient(180deg, #44ff88, #22cc66);
+}
+
+/* Icono misión */
+.mc-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 17px;
+  flex-shrink: 0;
+}
+
+.mc-done .mc-icon {
+  background: rgba(68, 255, 136, .08);
+  border-color: rgba(68, 255, 136, .2);
+}
+
+/* Cuerpo */
+.mc-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.mc-name {
+  font-family: 'Fredoka One', cursive;
+  font-size: 13px;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mc-done .mc-name {
+  color: rgba(255,255,255,.55);
+}
+
+.mc-desc {
+  font-size: 9px;
+  color: rgba(255,255,255,.32);
+  margin-top: 1px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Barra de progreso */
+.mc-prog-wrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 7px;
+}
+
+.mc-prog-track {
+  flex: 1;
+  height: 5px;
+  background: rgba(255,255,255,.06);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.mc-prog-fill {
+  height: 100%;
+  border-radius: 3px;
+  background: linear-gradient(90deg, #3a7fff, #60aaff);
+  transition: width .4s ease;
+}
+
+.mc-prog-label {
+  font-size: 8px;
+  color: rgba(255,255,255,.28);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* Recompensa */
+.mc-reward {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  flex-shrink: 0;
+  min-width: 52px;
+}
+
+.mc-rew-pill {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(100,180,255,.08);
+  border: 1px solid rgba(100,180,255,.15);
+  border-radius: 20px;
+  padding: 3px 9px 3px 6px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #7ab8ff;
+  white-space: nowrap;
+}
+
+.mc-rew-pill .rp-icon { font-size: 12px; }
+
+/* Krill pill específico */
+.rew-krill {
+  background: rgba(100,220,255,.08);
+  border-color: rgba(100,220,255,.15);
+  color: #88ddff;
+}
+
+.btn-claim {
+  font-family: 'Fredoka One', cursive;
+  font-size: 9px;
+  padding: 3px 9px;
+  border-radius: 6px;
+  background: linear-gradient(135deg, #c8960c, #e8c44a, #a07008);
+  color: #1a0800;
+  border: none;
+  cursor: pointer;
+  transition: all .14s;
+  white-space: nowrap;
+}
+
+.btn-claim:hover {
+  filter: brightness(1.12);
+  transform: scale(1.04);
+}
+
+.btn-claim:disabled {
+  background: rgba(68,255,136,.15);
+  color: #44ff88;
+  cursor: default;
+  transform: none;
+  filter: none;
+}
+
+/* ═══ DIVISOR VERTICAL ═══ */
+.mis-divider {
+  width: 1px;
+  background: rgba(255,255,255,.06);
+  flex-shrink: 0;
+  margin: 0;
+  position: relative;
+}
+
+.mis-divider::before {
+  content: '';
+  position: absolute;
+  top: 20%;
+  bottom: 20%;
+  left: 0;
+  width: 1px;
+  background: linear-gradient(180deg, transparent, rgba(255,255,255,.1), transparent);
+}
+
+/* ═══ COLUMNA DERECHA — EVENTOS ═══ */
+
+/* Tarjeta de evento grande */
+.event-card {
+  background: rgba(255,255,255,.03);
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 14px;
+  overflow: hidden;
+  margin-bottom: 8px;
+  transition: all .18s;
+}
+
+.event-card:hover {
+  border-color: rgba(255,170,50,.25);
+  background: rgba(255,170,50,.02);
+}
+
+.event-banner {
+  height: 52px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 14px;
+  position: relative;
+  overflow: hidden;
+}
+
+.event-banner-bg {
+  position: absolute;
+  inset: 0;
+  opacity: 0.85;
+}
+
+.event-banner-content {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+}
+
+.event-banner-icon {
+  font-size: 24px;
+  filter: drop-shadow(0 2px 8px rgba(0,0,0,.5));
+}
+
+.event-banner-info {
+  flex: 1;
+}
+
+.event-banner-name {
+  font-family: 'Fredoka One', cursive;
+  font-size: 14px;
+  color: #fff;
+  text-shadow: 0 1px 4px rgba(0,0,0,.5);
+}
+
+.event-banner-time {
+  font-size: 8px;
+  color: rgba(255,255,255,.55);
+  text-shadow: 0 1px 3px rgba(0,0,0,.5);
+  margin-top: 1px;
+}
+
+.event-live-badge {
+  font-family: 'Fredoka One', cursive;
+  font-size: 8px;
+  padding: 2px 7px;
+  border-radius: 20px;
+  background: rgba(255,60,60,.85);
+  color: #fff;
+  animation: pulseLive 2s ease-in-out infinite;
+  flex-shrink: 0;
+}
+
+@keyframes pulseLive {
+  0%, 100% { opacity: 1; }
+  50% { opacity: .6; }
+}
+
+/* Rewards de evento */
+.event-rewards {
+  padding: 10px 14px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ev-rew-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ev-rew-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+.ev-rew-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.ev-rew-name {
+  font-family: 'Fredoka One', cursive;
+  font-size: 11px;
+  color: #fff;
+}
+
+.ev-rew-type {
+  font-size: 8px;
+  color: rgba(255,255,255,.32);
+  margin-top: 1px;
+}
+
+.ev-rew-prog-wrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 5px;
+}
+
+.ev-rew-track {
+  flex: 1;
+  height: 4px;
+  background: rgba(255,255,255,.06);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.ev-rew-fill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width .4s ease;
+}
+
+.ev-rew-label {
+  font-size: 8px;
+  color: rgba(255,255,255,.28);
+  flex-shrink: 0;
+}
+
+/* Colores de rarity para eventos */
+.rew-epic    { background: linear-gradient(135deg, rgba(160,80,255,.15), rgba(120,40,220,.2)); border: 1px solid rgba(160,80,255,.25); }
+.rew-rare    { background: linear-gradient(135deg, rgba(60,150,255,.15), rgba(40,100,220,.2)); border: 1px solid rgba(60,150,255,.25); }
+.rew-common  { background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.1); }
+.fill-epic   { background: linear-gradient(90deg, #a040ff, #c880ff); }
+.fill-rare   { background: linear-gradient(90deg, #3a7fff, #60aaff); }
+.fill-gold   { background: linear-gradient(90deg, #c8960c, #e8c44a); }
+.fill-xp     { background: linear-gradient(90deg, #ff6030, #ffaa44); }
+
+/* Badge de skin/xp recompensa */
+.ev-rew-badge {
+  font-size: 8px;
+  padding: 2px 7px;
+  border-radius: 20px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.badge-skin  { background: rgba(160,80,255,.2); color: #c880ff; border: 1px solid rgba(160,80,255,.3); }
+.badge-xp    { background: rgba(255,120,40,.2); color: #ffaa66; border: 1px solid rgba(255,120,40,.3); }
+.badge-rare  { background: rgba(60,150,255,.2); color: #7ab8ff; border: 1px solid rgba(60,150,255,.3); }
+
+/* Progreso general del evento */
+.event-prog-bar {
+  height: 3px;
+  background: rgba(255,255,255,.05);
+  border-radius: 0 0 14px 14px;
+  overflow: hidden;
+}
+
+.event-prog-fill {
+  height: 100%;
+  transition: width .4s ease;
+}
+
+/* ═══ RESUMEN KRILL ═══ */
+.krill-summary {
+  margin-bottom: 10px;
+  background: linear-gradient(135deg, rgba(100,220,255,.07), rgba(60,160,255,.04));
+  border: 1px solid rgba(100,220,255,.15);
+  border-radius: 12px;
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.ks-icon { font-size: 22px; }
+
+.ks-body { flex: 1; }
+
+.ks-label {
+  font-size: 8px;
+  color: rgba(255,255,255,.35);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.ks-amount {
+  font-family: 'Fredoka One', cursive;
+  font-size: 18px;
+  color: #88ddff;
+  line-height: 1.1;
+}
+
+.ks-sub {
+  font-size: 8px;
+  color: rgba(136,221,255,.5);
+  margin-top: 1px;
+}
+
+/* ═══ Completed glow ═══ */
+@keyframes completedGlow {
+  0%, 100% { box-shadow: 0 0 0 rgba(68,255,136,0); }
+  50% { box-shadow: 0 0 12px rgba(68,255,136,.18); }
+}
+
+.mc-done {
+  animation: completedGlow 3s ease-in-out infinite;
+}
