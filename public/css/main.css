@@ -36,7 +36,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#060717;font-family:
 .linput:focus{border-color:rgba(100,160,255,.6);background:rgba(255,255,255,.09);}
 .lerr{font-size:10px;color:#ff6666;text-align:center;min-height:14px;}
 .auth-ver{position:absolute;bottom:10px;right:14px;font-size:8px;color:rgba(255,255,255,.12);}
-#auth-bar{position:absolute;bottom:0;left:0;right:0;height:3px;background:linear-gradient(90deg,transparent,#5ab0ff,#a060ff,#ff6060,#ffa020,transparent);}
+#auth-bar{position:absolute;bottom:0;left:0;right:0;height:5px;background:linear-gradient(90deg,transparent,#5ab0ff,#a060ff,#ff6060,#ffa020,transparent);}
 
 /* ══════ DASHBOARD SHELL ══════ */
 #dashboard{position:fixed;inset:0;display:flex;flex-direction:column;z-index:1;}

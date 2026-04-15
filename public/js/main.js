@@ -1,94 +1,10 @@
 // ═══════════════════════════════════════════════════════
-//  BASE DE DATOS — localStorage
+//  BASE DE DATOS — Supabase (via perfil-monedero.js)
+//  getCurrUser, saveCurrUser, getUserCurr, updateTopbarCurrencies,
+//  addCurrency, buyItem, hasItem, buyChar, syncOwnedChars,
+//  CHARS_DEF, CURRENCY_LABELS, CICONS
+//  → todos definidos en perfil-monedero.js
 // ═══════════════════════════════════════════════════════
-const DB_KEY='pb_db_v2';
-function dbLoad(){try{return JSON.parse(localStorage.getItem(DB_KEY)||'{}');}catch(e){return{};}}
-function dbSave(db){try{localStorage.setItem(DB_KEY,JSON.stringify(db));}catch(e){}}
-
-function defaultUser(u){
-  return{
-    pass:'',
-    created:Date.now(),
-    lastLogin:Date.now(),
-    // Monedas
-    peces:117800,
-    krill:11340,
-    piedras:11850,
-    perlas:1112,
-    // Inventario: arrays de keys
-    ownedChars:['polar','chili'],
-    ownedSkins:[],
-    ownedEmotes:[],
-    ownedIcons:[],
-    ownedBgs:[],
-    // Estadísticas
-    wins:0,
-    losses:0,
-    totalDmg:0,
-    totalKills:0,
-    // Rango
-    rankPts:145,
-  };
-}
-
-function getUser(u){const db=dbLoad();return db[u]||null;}
-function saveUser(u,data){const db=dbLoad();db[u]=data;dbSave(db);}
-function getCurrUser(){if(!currentUser)return null;return getUser(currentUser);}
-function saveCurrUser(data){if(currentUser)saveUser(currentUser,data);}
-
-// Obtener monedas del usuario actual para UI
-function getUserCurr(){
-  const u=getCurrUser();
-  if(!u)return{peces:0,krill:0,piedras:0,perlas:0};
-  return{peces:u.peces,krill:u.krill,piedras:u.piedras,perlas:u.perlas};
-}
-function updateTopbarCurrencies(){
-  const c=getUserCurr();
-  const fmt=n=>n>=1000?(n/1000).toFixed(1).replace('.0','')+'K':n;
-  const el=id=>document.getElementById(id);
-  if(el('c-peces'))el('c-peces').textContent=fmt(c.peces);
-  if(el('c-krill'))el('c-krill').textContent=fmt(c.krill);
-  if(el('c-piedras'))el('c-piedras').textContent=fmt(c.piedras);
-  if(el('c-perlas'))el('c-perlas').textContent=fmt(c.perlas);
-}
-
-// ═══════════════════════════════════════════════════════
-//  COMPRAS — lógica funcional
-// ═══════════════════════════════════════════════════════
-const CURRENCY_LABELS={peces:'🐟 Peces',krill:'🦐 Krill',piedras:'🪨 Piedras',perlas:'🦪 Perlas'};
-
-function buyItem(type,key,price,currency){
-  const u=getCurrUser();if(!u){showToast('⚠️ Debes iniciar sesión','#ff8844');return false;}
-  // Verificar si ya lo tiene
-  const arrKey='owned'+type.charAt(0).toUpperCase()+type.slice(1)+'s';
-  const ownArr=u[arrKey]||[];
-  if(ownArr.includes(key)){showToast('✅ ¡Ya tienes este ítem!','#44ff88');return false;}
-  // Verificar saldo
-  if(u[currency]<price){showToast('❌ No tienes suficiente '+CURRENCY_LABELS[currency],'#ff4444');return false;}
-  // Descontar y añadir
-  u[currency]-=price;
-  u[arrKey]=[...ownArr,key];
-  saveCurrUser(u);
-  updateTopbarCurrencies();
-  // Si es personaje, actualizar CHARS_DEF en UI
-  if(type==='char'&&CHARS_DEF[key])CHARS_DEF[key].owned=true;
-  showToast('🎉 ¡Comprado! -'+price+' '+CICONS[currency],'#a078ff');
-  return true;
-}
-
-function hasItem(type,key){
-  const u=getCurrUser();if(!u)return false;
-  const arrKey='owned'+type.charAt(0).toUpperCase()+type.slice(1)+'s';
-  const arr=u[arrKey]||[];
-  return arr.includes(key);
-}
-
-function addCurrency(currency,amount){
-  const u=getCurrUser();if(!u)return;
-  u[currency]=(u[currency]||0)+amount;
-  saveCurrUser(u);
-  updateTopbarCurrencies();
-}
 
 // Toast de notificación
 function showToast(msg,col){
@@ -98,52 +14,23 @@ function showToast(msg,col){
   clearTimeout(t._to);t._to=setTimeout(()=>{t.style.opacity='0';},2200);
 }
 
-let currentUser=null;
-function doLogin(){
-  const u=document.getElementById('li-u').value.trim(),p=document.getElementById('li-p').value;
-  const err=document.getElementById('li-err');
-  if(!u){err.textContent='Ingresa tu usuario.';return;}if(!p){err.textContent='Ingresa la contraseña.';return;}
-  const db=dbLoad();if(!db[u]){err.textContent='Usuario no encontrado.';return;}
-  if(db[u].pass!==p){err.textContent='Contraseña incorrecta.';return;}
-  db[u].lastLogin=Date.now();dbSave(db);
-  currentUser=u;err.textContent='';
-  // Sincronizar CHARS_DEF con inventario
-  syncOwnedChars();
-  enterDash(u);
-}
-function doGuest(){
-  const ns=['IceBrawler','ArcticPengu','FrostyKing','SnowMaster','PolarHero'];
-  currentUser=ns[Math.floor(Math.random()*ns.length)]+Math.floor(Math.random()*999);
-  // Crear usuario invitado temporal
-  const db=dbLoad();db[currentUser]=defaultUser(currentUser);dbSave(db);
-  syncOwnedChars();
-  enterDash(currentUser);
-}
-function showReg(){document.getElementById('login').classList.add('hidden');document.getElementById('register').classList.remove('hidden');}
-function doReg(){
-  const u=document.getElementById('ru').value.trim(),p=document.getElementById('rp').value,p2=document.getElementById('rp2').value;
-  const err=document.getElementById('reg-err');
-  if(u.length<3){err.textContent='Usuario muy corto.';return;}if(p.length<4){err.textContent='Contraseña muy corta.';return;}
-  if(p!==p2){err.textContent='Las contraseñas no coinciden.';return;}
-  const db=dbLoad();if(db[u]){err.textContent='Usuario ya existe.';return;}
-  const newU=defaultUser(u);newU.pass=p;db[u]=newU;dbSave(db);
-  err.style.color='#66ff88';err.textContent='¡Cuenta creada!';
-  currentUser=u;syncOwnedChars();setTimeout(()=>enterDash(u),700);
-}
+// ── Auth functions (doLogin, doReg, doGuest, doLogout, showReg)
+//    definidas en auth.js — no se redefinen aquí.
+
 function showLogin(){
   document.getElementById('login').classList.remove('hidden');document.getElementById('register').classList.add('hidden');
   document.getElementById('dashboard').classList.add('hidden');document.getElementById('game-wrap').classList.add('hidden');
 }
 function syncOwnedChars(){
-  const u=getCurrUser();if(!u)return;
-  const owned=u.ownedChars||['polar','chili'];
+  const owned=window.PB?._ownedChars??['polar','chili'];
   Object.keys(CHARS_DEF).forEach(k=>{CHARS_DEF[k].owned=owned.includes(k);});
 }
 function enterDash(name){
   if(typeof initPerfilMonedero === 'function') initPerfilMonedero();
   document.getElementById('login').classList.add('hidden');document.getElementById('register').classList.add('hidden');
   document.getElementById('dashboard').classList.remove('hidden');
-  document.getElementById('tb-pname').textContent=name;document.getElementById('prof-uname').textContent=name;
+  document.getElementById('tb-pname').textContent=name;
+  const profUname=document.getElementById('prof-uname');if(profUname)profUname.textContent=name;
   updateTopbarCurrencies();
   navTo('home');
 }
@@ -684,22 +571,21 @@ function endGame(winner){
   document.getElementById('rs').textContent=msgs[winner.ck]||'¡Victoria!';document.getElementById('rb').style.borderColor=winner.color+'66';
   const loser=winner===p1?p2:p1;
   document.getElementById('fstats').innerHTML=`<tr><th></th><th>Personaje</th><th>💀 K</th><th>☠️ M</th><th>⚔️ Daño</th></tr><tr><td>🏆</td><td class="pnc" style="color:${winner.color}">${winner.icon} ${winner.name}</td><td style="color:#66ff88;font-weight:700">${stats[winner===p1?'p1':'p2'].kills}</td><td>${stats[winner===p1?'p1':'p2'].deaths}</td><td style="color:#ffcc44;font-weight:700">${stats[winner===p1?'p1':'p2'].dmg}</td></tr><tr><td>💀</td><td class="pnc" style="color:${loser.color}">${loser.icon} ${loser.name}</td><td style="color:#66ff88;font-weight:700">${stats[loser===p1?'p1':'p2'].kills}</td><td>${stats[loser===p1?'p1':'p2'].deaths}</td><td style="color:#ffcc44;font-weight:700">${stats[loser===p1?'p1':'p2'].dmg}</td></tr>`;
-  // Guardar estadísticas en DB
-  const u=getCurrUser();
-  if(u){
-    u.wins=(u.wins||0)+(winner===p1?1:0);
-    u.losses=(u.losses||0)+(winner!==p1?1:0);
-    u.totalDmg=(u.totalDmg||0)+stats.p1.dmg;
-    u.totalKills=(u.totalKills||0)+stats.p1.kills;
-    // Recompensa post-partida: peces y krill
-    const pecesGan=winner===p1?120:60;const krillGan=winner===p1?30:15;
-    u.peces=(u.peces||0)+pecesGan;u.krill=(u.krill||0)+krillGan;
-    saveCurrUser(u);updateTopbarCurrencies();
-    // Mostrar recompensa en pantalla de resultados
-    setTimeout(()=>{
-      const rb=document.getElementById('rb');
-      if(rb){const rew=document.createElement('div');rew.style.cssText='margin-top:12px;font-size:12px;color:rgba(255,255,255,.5)';rew.innerHTML=`Recompensa: <span style="color:#5ab0ff">+${pecesGan} 🐟</span> · <span style="color:#66ddff">+${krillGan} 🦐</span>`;rb.appendChild(rew);}
-    },200);
+
+  // Guardar resultado y recompensas en Supabase (via perfil-monedero.js)
+  if(typeof saveMatchResult === 'function'){
+    saveMatchResult({
+      winner: winner===p1?'p1':'p2',
+      p1Stats: stats.p1,
+      p2Stats: stats.p2,
+      modeName: '1v1_offline',
+    }).then(rew=>{
+      if(!rew)return;
+      setTimeout(()=>{
+        const rb=document.getElementById('rb');
+        if(rb){const div=document.createElement('div');div.style.cssText='margin-top:12px;font-size:12px;color:rgba(255,255,255,.5)';div.innerHTML=`Recompensa: <span style="color:#5ab0ff">+${rew.pecesGan} 🐟</span> · <span style="color:#66ddff">+${rew.krillGan} 🦐</span>`;rb.appendChild(div);}
+      },200);
+    });
   }
 }
 
@@ -753,6 +639,8 @@ document.addEventListener('keydown',e=>{
 document.addEventListener('keyup',e=>{keys[e.key.toLowerCase()]=false;});
 document.addEventListener('contextmenu',e=>e.preventDefault());
 window.addEventListener('load',()=>{
+  // initAuth() es llamado por auth.js vía DOMContentLoaded.
+  // Si por alguna razón auth.js no cargó, mostramos el login directamente.
   if(typeof initAuth === 'function') initAuth();
   else showLogin();
 });

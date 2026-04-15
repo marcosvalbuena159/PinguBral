@@ -346,6 +346,5 @@ function tradError(msg) {
   return msg;
 }
 
-// ── Arranque ───────────────────────────────────────────────
-// Esperar a que el DOM esté listo
-document.addEventListener('DOMContentLoaded', initAuth);
+// ── Arranque (initAuth es llamado desde window.load en main.js) ──────────────────
+// initAuth se expone globalmente; main.js la llama en window.load.
