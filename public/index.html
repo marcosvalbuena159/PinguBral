@@ -11,61 +11,357 @@
 <link rel="stylesheet" href="css/misiones.css">
 <link rel="stylesheet" href="css/perfil.css">
 <link rel="stylesheet" href="css/tienda.css">
+<link rel="stylesheet" href="css/ofline/pvsp.css">
+/* ══════════════════════════════════════════════
+   AUTH REDESIGN — Modal centrado sobre fondo
+   administrable (imagen o gradiente por defecto)
+   ══════════════════════════════════════════════ */
+
+/* ── Capa de fondo completa ── */
+#auth-bg-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 190;
+  background: #060717;
+  overflow: hidden;
+  transition: background-image .4s ease;
+}
+#auth-bg-layer img#auth-bg-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: .55;
+  filter: blur(2px) saturate(1.2);
+  transition: opacity .4s;
+}
+/* Vignette siempre presente */
+#auth-bg-layer::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at 50% 50%, transparent 30%, rgba(0,0,0,.75) 100%),
+    linear-gradient(to bottom, rgba(0,0,0,.25) 0%, rgba(4,5,20,.65) 100%);
+  pointer-events: none;
+}
+
+/* Partículas hexagonales (herencia) */
+.auth-hex-grid {
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='100'%3E%3Cpolygon points='28,2 54,16 54,44 28,58 2,44 2,16' fill='none' stroke='rgba(100,160,255,0.05)' stroke-width='1'/%3E%3C/svg%3E");
+  opacity: .9;
+  pointer-events: none;
+}
+
+/* ── Pantalla de auth (centrador) ── */
+.auth-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.auth-screen.hidden { display: none !important; }
+
+/* ── MODAL GLASS ── */
+.auth-modal {
+  position: relative;
+  z-index: 10;
+  width: 100%;
+  max-width: 360px;
+  background: rgba(6, 8, 26, 0.72);
+  border: 1px solid rgba(100, 160, 255, 0.18);
+  border-radius: 20px;
+  padding: 32px 28px 28px;
+  backdrop-filter: blur(22px) saturate(1.4);
+  -webkit-backdrop-filter: blur(22px) saturate(1.4);
+  box-shadow:
+    0 8px 48px rgba(0, 0, 0, 0.55),
+    0 1px 0 rgba(255,255,255,.06) inset,
+    0 0 0 1px rgba(255,255,255,.04) inset;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  animation: modalIn .28s cubic-bezier(.22,.68,0,1.2) both;
+}
+@keyframes modalIn {
+  from { opacity: 0; transform: translateY(14px) scale(.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* Línea de acento superior */
+.auth-modal::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 20px; right: 20px;
+  height: 2px;
+  border-radius: 0 0 4px 4px;
+  background: linear-gradient(90deg, transparent, #5ab0ff 40%, #a060ff 70%, transparent);
+  opacity: .7;
+}
+
+/* ── Cabecera del modal ── */
+.aml-logo {
+  font-family: 'Fredoka One', cursive;
+  font-size: 36px;
+  letter-spacing: 2px;
+  text-align: center;
+  background: linear-gradient(135deg, #7ab8ff, #fff 50%, #ffd060);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 0 18px rgba(120,180,255,.45));
+  margin-bottom: 2px;
+}
+.aml-sub {
+  text-align: center;
+  font-size: 9px;
+  letter-spacing: 4px;
+  color: rgba(200, 220, 255, .35);
+  font-weight: 900;
+  text-transform: uppercase;
+  margin-bottom: 18px;
+}
+.aml-divider {
+  width: 100%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(100,160,255,.25), transparent);
+  margin-bottom: 18px;
+}
+
+/* ── Formulario ── */
+.aml-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.aml-input {
+  background: rgba(255,255,255,.055);
+  border: 1px solid rgba(100,160,255,.2);
+  border-radius: 10px;
+  padding: 11px 14px;
+  color: #fff;
+  font-size: 13px;
+  font-family: 'Nunito', sans-serif;
+  outline: none;
+  transition: border-color .18s, background .18s;
+  width: 100%;
+}
+.aml-input::placeholder { color: rgba(255,255,255,.26); }
+.aml-input:focus {
+  border-color: rgba(100,160,255,.55);
+  background: rgba(255,255,255,.08);
+}
+select.aml-input { cursor: pointer; color: rgba(255,255,255,.65); }
+select.aml-input option { background: #0c1130; color: #fff; }
+
+/* ── Tabs login / registro ── */
+.aml-tabs {
+  display: flex;
+  background: rgba(0,0,0,.3);
+  border-radius: 10px;
+  padding: 3px;
+  margin-bottom: 18px;
+  gap: 3px;
+}
+.aml-tab {
+  flex: 1;
+  padding: 8px 0;
+  border: none;
+  border-radius: 7px;
+  font-family: 'Fredoka One', cursive;
+  font-size: 13px;
+  cursor: pointer;
+  background: transparent;
+  color: rgba(255,255,255,.4);
+  transition: all .16s;
+}
+.aml-tab.active {
+  background: linear-gradient(135deg, rgba(58,127,255,.55), rgba(96,68,255,.45));
+  color: #fff;
+  box-shadow: 0 2px 10px rgba(60,100,255,.3);
+}
+
+/* ── Error ── */
+.aml-err {
+  font-size: 10px;
+  color: #ff6666;
+  text-align: center;
+  min-height: 14px;
+}
+
+/* ── Separador OAuth ── */
+.aml-sep {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 4px 0;
+}
+.aml-sep-line { flex: 1; height: 1px; background: rgba(255,255,255,.09); }
+.aml-sep span { font-size: 9px; color: rgba(255,255,255,.22); white-space: nowrap; }
+
+/* ── Botones OAuth ── */
+.aml-oauth-row {
+  display: flex;
+  gap: 8px;
+}
+.aml-oauth-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 0;
+  border-radius: 9px;
+  border: 1px solid rgba(255,255,255,.12);
+  background: rgba(255,255,255,.06);
+  color: rgba(255,255,255,.72);
+  font-family: 'Nunito', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all .14s;
+}
+.aml-oauth-btn:hover {
+  background: rgba(255,255,255,.11);
+  border-color: rgba(255,255,255,.22);
+  color: #fff;
+}
+
+/* ── Footer del modal ── */
+.aml-footer {
+  text-align: center;
+  font-size: 9px;
+  color: rgba(255,255,255,.2);
+  margin-top: 14px;
+}
+
+/* ── Checkbox T&C ── */
+.aml-tos {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  color: rgba(255,255,255,.42);
+  cursor: pointer;
+}
+.aml-tos input[type=checkbox] {
+  width: 15px;
+  height: 15px;
+  accent-color: #7ab8ff;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.aml-tos a { color: #7ab8ff; text-decoration: underline; cursor: pointer; }
+
+/* ── Botón cambiar fondo (esquina, solo visible en auth) ── */
+#auth-change-bg {
+  position: fixed;
+  bottom: 16px;
+  right: 16px;
+  z-index: 210;
+  background: rgba(0,0,0,.5);
+  border: 1px solid rgba(255,255,255,.14);
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-size: 13px;
+  cursor: pointer;
+  color: rgba(255,255,255,.55);
+  backdrop-filter: blur(6px);
+  transition: all .14s;
+}
+#auth-change-bg:hover {
+  background: rgba(0,0,0,.7);
+  color: #fff;
+  border-color: rgba(255,255,255,.3);
+}
+
+/* ── Versión ── */
+.auth-ver {
+  position: fixed;
+  bottom: 10px;
+  left: 14px;
+  font-size: 8px;
+  color: rgba(255,255,255,.12);
+  z-index: 210;
+}
+/* ── Barra inferior de color ── */
+#auth-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0; right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, #5ab0ff, #a060ff, #ff6060, #ffa020, transparent);
+  z-index: 210;
+}
+</style>
 </head>
 <body>
 
-<div id="login" class="auth-screen">
-  <div id="login-content">
-    <div class="auth-logo">PenguBrawl</div>
-    <div class="auth-div"></div>
-    <div class="auth-tag">Destruye · Conquista · Domina</div>
-    <div class="lform">
-  <div style="display:flex;align-items:center;gap:10px;margin:4px 0">
-    <div style="flex:1;height:1px;background:rgba(255,255,255,.1)"></div>
-    <span style="font-size:10px;color:rgba(255,255,255,.25)">o ingresa con</span>
-    <div style="flex:1;height:1px;background:rgba(255,255,255,.1)"></div>
-  </div>
-  <div style="display:flex;gap:8px">
-    <button class="btn btn-s btn-sm" style="flex:1;font-size:11px;display:flex;align-items:center;justify-content:center;gap:6px" onclick="doLoginGoogle()">
-      <svg width="14" height="14" viewBox="0 0 24 24">...</svg>
-      Google
-    </button>
-    <button class="btn btn-s btn-sm" style="flex:1;font-size:11px;display:flex;align-items:center;justify-content:center;gap:6px" onclick="doLoginFacebook()">
-      <svg width="14" height="14" viewBox="0 0 24 24">...</svg>
-      Facebook
-    </button>
-  </div>
-    </div>
-  </div>
-  <div class="auth-ver">v1.0.7.5</div>
-  <div id="auth-bar"></div>
+<!-- ═══════════════════════════════════════
+     FONDO ADMINISTRABLE (imagen o gradiente)
+     Se muestra detrás de login y register
+     ═══════════════════════════════════════ -->
+<div id="auth-bg-layer">
+  <div class="auth-hex-grid"></div>
+  <!-- La imagen se inserta aquí por JS cuando el admin sube una -->
 </div>
 
-<!-- ═══ PANTALLA DE REGISTRO — reemplaza el div#register actual ═══ -->
-<div id="register" class="auth-screen hidden">
-  <div id="reg-bg">
-    <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 50% 20%,rgba(10,20,60,.7) 0%,rgba(0,2,12,.98) 70%)"></div>
-    <div class="hexgrid"></div>
-  </div>
-  <div style="position:relative;display:flex;flex-direction:column;align-items:center;gap:10px;width:100%;max-width:360px;padding:0 16px">
-    <div style="font-family:'Fredoka One',cursive;font-size:28px;background:linear-gradient(135deg,#7ab8ff,#fff);-webkit-background-clip:text;-webkit-text-fill-color:transparent">
-      Crear Cuenta
+<!-- Botón cambiar fondo (visible solo en pantallas auth) -->
+<button id="auth-change-bg" title="Cambiar imagen de fondo (admin)" onclick="document.getElementById('auth-bg-file').click()">🖼️</button>
+<input type="file" id="auth-bg-file" accept="image/*" style="display:none" onchange="setAuthBg(this)">
+
+<!-- ═══════════════════════════════════════
+     PANTALLA DE LOGIN
+     ═══════════════════════════════════════ -->
+<div id="login" class="auth-screen">
+  <div class="auth-modal">
+    <!-- Logo -->
+    <div class="aml-logo">PenguBrawl</div>
+    <div class="aml-sub">Destruye · Conquista · Domina</div>
+    <div class="aml-divider"></div>
+
+    <!-- Tabs -->
+    <div class="aml-tabs">
+      <button class="aml-tab active" id="tab-login" onclick="switchAuthTab('login')">Ingresar</button>
+      <button class="aml-tab" id="tab-reg" onclick="switchAuthTab('reg')">Registro</button>
     </div>
-    <div style="font-size:11px;color:rgba(255,255,255,.32);margin-bottom:4px">¡Únete a la arena polar!</div>
 
-    <div class="lform" style="margin-top:0;width:100%">
+    <!-- ── PANEL LOGIN ── -->
+    <div id="panel-login" class="aml-form">
+      <input class="aml-input" id="lu" type="text" placeholder="Usuario o correo" maxlength="100" autocomplete="username">
+      <input class="aml-input" id="lp" type="password" placeholder="Contraseña" maxlength="64" autocomplete="current-password">
+      <div class="aml-err" id="login-err"></div>
+      <button class="btn btn-p" style="width:100%;padding:12px 0;font-size:15px" onclick="doLogin()">
+        🐧 Ingresar
+      </button>
+      <div class="aml-sep">
+        <div class="aml-sep-line"></div>
+        <span>o ingresa con</span>
+        <div class="aml-sep-line"></div>
+      </div>
+      <div class="aml-oauth-row">
+        <button class="aml-oauth-btn" onclick="doLoginGoogle()">
+          <svg width="14" height="14" viewBox="0 0 24 24"><path fill="#ea4335" d="M5.27 9.76A7.08 7.08 0 0 1 19.07 10h-7v4h4.07a4.06 4.06 0 0 1-1.64 2.11l3.27 2.51C19.91 16.76 21 14.55 21 12c0-.66-.06-1.3-.17-1.91z"/><path fill="#4285f4" d="M5.27 9.76l-3.28-2.5A11 11 0 0 0 1 12c0 1.77.42 3.44 1.16 4.93l3.29-2.5A7 7 0 0 1 5 12c0-.84.14-1.65.27-2.24z"/><path fill="#34a853" d="M12 19c2.77 0 5.1-.91 6.8-2.47l-3.27-2.51A6.57 6.57 0 0 1 12 15a7.09 7.09 0 0 1-6.73-5.24L1.99 12.3A11 11 0 0 0 12 19z"/><path fill="#fbbc05" d="M5.27 9.76A7.09 7.09 0 0 1 12 5c1.76 0 3.35.67 4.55 1.76L19.87 3.4A11 11 0 0 0 12 1C7.53 1 3.7 3.56 1.99 7.26z"/></svg>
+          Google
+        </button>
+        <button class="aml-oauth-btn" onclick="doLoginFacebook()">
+          <svg width="14" height="14" viewBox="0 0 24 24"><path fill="#1877f2" d="M24 12A12 12 0 1 0 12 24V15.5H9V12h3V9.5C12 6.7 13.7 5 16.2 5c1.2 0 2.4.2 2.4.2V8h-1.4C15.6 8 15 8.7 15 9.5V12h3l-.5 3.5H15V24A12 12 0 0 0 24 12z"/></svg>
+          Facebook
+        </button>
+      </div>
+      <div class="aml-footer">¿No tienes cuenta? <span style="color:#7ab8ff;cursor:pointer" onclick="switchAuthTab('reg')">Regístrate aquí</span></div>
+    </div>
 
-      <!-- Usuario -->
-      <input class="linput" id="ru" type="text" placeholder="Usuario (mín 3 caracteres)" maxlength="20" autocomplete="off">
-
-      <!-- Correo (opcional) -->
-      <input class="linput" id="re" type="email" placeholder="Correo electrónico (opcional)" maxlength="100" autocomplete="off">
-
-      <!-- Teléfono (opcional) -->
-      <input class="linput" id="rt-" type="tel" placeholder="Teléfono (opcional)" maxlength="20" autocomplete="off">
-
-      <!-- Región -->
-      <select class="linput" id="rr" style="cursor:pointer;color:rgba(255,255,255,.65)">
+    <!-- ── PANEL REGISTRO ── -->
+    <div id="panel-reg" class="aml-form" style="display:none">
+      <input class="aml-input" id="ru" type="text" placeholder="Usuario (mín 3 caracteres)" maxlength="20" autocomplete="off">
+      <input class="aml-input" id="re" type="email" placeholder="Correo electrónico" maxlength="100" autocomplete="off">
+      <input class="aml-input" id="rt" type="tel" placeholder="Teléfono (opcional)" maxlength="20" autocomplete="off">
+      <select class="aml-input" id="rr">
         <option value="">🌍 Selecciona tu región</option>
         <option value="Colombia">🇨🇴 Colombia</option>
         <option value="México">🇲🇽 México</option>
@@ -78,52 +374,218 @@
         <option value="España">🇪🇸 España</option>
         <option value="Otro">🌍 Otro</option>
       </select>
-
-      <!-- Contraseña -->
-      <input class="linput" id="rp" type="password" placeholder="Contraseña (mín 4 caracteres)" maxlength="32" autocomplete="new-password">
-
-      <!-- Confirmar contraseña -->
-      <input class="linput" id="rp2" type="password" placeholder="Confirmar contraseña" maxlength="32" autocomplete="new-password">
-
-      <!-- Términos y condiciones -->
-      <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:11px;color:rgba(255,255,255,.45);margin:4px 0">
-        <input type="checkbox" id="rtos" style="width:16px;height:16px;cursor:pointer;accent-color:#7ab8ff">
-        <span>Acepto los <span style="color:#7ab8ff;text-decoration:underline;cursor:pointer" onclick="alert('Términos y condiciones de PenguBrawl:\n\n- Debes tener 13 años o más.\n- No uses hacks ni trampas.\n- Trata bien a otros jugadores.\n- No compartas tu contraseña.\n\nAl aceptar, confirmas que has leído y aceptas estas condiciones.')">términos y condiciones</span></span>
+      <input class="aml-input" id="rp" type="password" placeholder="Contraseña (mín 4 caracteres)" maxlength="32" autocomplete="new-password">
+      <input class="aml-input" id="rp2" type="password" placeholder="Confirmar contraseña" maxlength="32" autocomplete="new-password">
+      <label class="aml-tos">
+        <input type="checkbox" id="rtos">
+        <span>Acepto los <a onclick="alert('Términos y condiciones de PenguBrawl:\n\n- Debes tener 13 años o más.\n- No uses hacks ni trampas.\n- Trata bien a otros jugadores.\n- No compartas tu contraseña.\n\nAl aceptar, confirmas que has leído y aceptas estas condiciones.')">términos y condiciones</a></span>
       </label>
-
-      <!-- Error -->
-      <div class="lerr" id="reg-err" style="display:none"></div>
-
-      <!-- Botón registrarse -->
+      <div class="aml-err" id="reg-err"></div>
       <button class="btn btn-gold" style="font-size:15px;padding:12px 0;width:100%" onclick="doReg()">
         ✨ Crear Cuenta
       </button>
-
-      <!-- Divisor -->
-      <div style="display:flex;align-items:center;gap:10px;margin:4px 0">
-        <div style="flex:1;height:1px;background:rgba(255,255,255,.1)"></div>
-        <span style="font-size:10px;color:rgba(255,255,255,.25)">o regístrate con</span>
-        <div style="flex:1;height:1px;background:rgba(255,255,255,.1)"></div>
+      <div class="aml-sep">
+        <div class="aml-sep-line"></div>
+        <span>o regístrate con</span>
+        <div class="aml-sep-line"></div>
       </div>
-
-      <!-- OAuth -->
-      <div style="display:flex;gap:8px">
-        <button class="btn btn-s btn-sm" style="flex:1;font-size:11px;display:flex;align-items:center;justify-content:center;gap:6px" onclick="doLoginGoogle()">
+      <div class="aml-oauth-row">
+        <button class="aml-oauth-btn" onclick="doLoginGoogle()">
           <svg width="14" height="14" viewBox="0 0 24 24"><path fill="#ea4335" d="M5.27 9.76A7.08 7.08 0 0 1 19.07 10h-7v4h4.07a4.06 4.06 0 0 1-1.64 2.11l3.27 2.51C19.91 16.76 21 14.55 21 12c0-.66-.06-1.3-.17-1.91z"/><path fill="#4285f4" d="M5.27 9.76l-3.28-2.5A11 11 0 0 0 1 12c0 1.77.42 3.44 1.16 4.93l3.29-2.5A7 7 0 0 1 5 12c0-.84.14-1.65.27-2.24z"/><path fill="#34a853" d="M12 19c2.77 0 5.1-.91 6.8-2.47l-3.27-2.51A6.57 6.57 0 0 1 12 15a7.09 7.09 0 0 1-6.73-5.24L1.99 12.3A11 11 0 0 0 12 19z"/><path fill="#fbbc05" d="M5.27 9.76A7.09 7.09 0 0 1 12 5c1.76 0 3.35.67 4.55 1.76L19.87 3.4A11 11 0 0 0 12 1C7.53 1 3.7 3.56 1.99 7.26z"/></svg>
           Google
         </button>
-        <button class="btn btn-s btn-sm" style="flex:1;font-size:11px;display:flex;align-items:center;justify-content:center;gap:6px" onclick="doLoginFacebook()">
+        <button class="aml-oauth-btn" onclick="doLoginFacebook()">
           <svg width="14" height="14" viewBox="0 0 24 24"><path fill="#1877f2" d="M24 12A12 12 0 1 0 12 24V15.5H9V12h3V9.5C12 6.7 13.7 5 16.2 5c1.2 0 2.4.2 2.4.2V8h-1.4C15.6 8 15 8.7 15 9.5V12h3l-.5 3.5H15V24A12 12 0 0 0 24 12z"/></svg>
           Facebook
         </button>
       </div>
-
-      <button class="btn btn-s btn-sm" style="margin-top:4px" onclick="showLogin()">← Volver al login</button>
+      <div class="aml-footer">¿Ya tienes cuenta? <span style="color:#7ab8ff;cursor:pointer" onclick="switchAuthTab('login')">Inicia sesión</span></div>
     </div>
   </div>
 </div>
 
+<!-- ═══ (registro separado — legacy, oculto) ═══ -->
+<div id="register" class="auth-screen hidden"></div>
 
+<!-- Versión y barra -->
+<div class="auth-ver">v1.0.8.5</div>
+<div id="auth-bar"></div>
+
+<!-- ═══════════════════════════════════════
+     JS AUTH — tabs + fondo + Supabase
+     ═══════════════════════════════════════ -->
+<script>
+/* ── Tabs Login / Registro ── */
+function switchAuthTab(tab) {
+  const isLogin = (tab === 'login');
+  document.getElementById('tab-login').classList.toggle('active', isLogin);
+  document.getElementById('tab-reg').classList.toggle('active', !isLogin);
+  document.getElementById('panel-login').style.display = isLogin ? 'flex' : 'none';
+  document.getElementById('panel-reg').style.display  = !isLogin ? 'flex' : 'none';
+  document.getElementById('login-err').textContent = '';
+  document.getElementById('reg-err').textContent   = '';
+}
+
+/* ── Fondo administrable ── */
+const AUTH_BG_KEY = 'pb_auth_bg';
+function setAuthBg(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    applyAuthBg(e.target.result);
+    try { localStorage.setItem(AUTH_BG_KEY, e.target.result); } catch(_) {}
+  };
+  reader.readAsDataURL(file);
+  input.value = '';
+}
+function applyAuthBg(src) {
+  let layer = document.getElementById('auth-bg-layer');
+  let img = document.getElementById('auth-bg-img');
+  if (!img) {
+    img = document.createElement('img');
+    img.id = 'auth-bg-img';
+    layer.insertBefore(img, layer.firstChild);
+  }
+  img.src = src;
+}
+/* Restaurar fondo guardado */
+(function(){
+  try {
+    const saved = localStorage.getItem(AUTH_BG_KEY);
+    if (saved) applyAuthBg(saved);
+  } catch(_) {}
+})();
+
+/* ── showLogin: mostrar pantallas auth, ocultar dashboard/juego ── */
+function showLogin() {
+  const login = document.getElementById('login');
+  const dash  = document.getElementById('dashboard');
+  const game  = document.getElementById('game-wrap');
+  const bg    = document.getElementById('auth-bg-layer');
+  const chbg  = document.getElementById('auth-change-bg');
+  const ver   = document.querySelector('.auth-ver');
+  const bar   = document.getElementById('auth-bar');
+  if (login)  login.classList.remove('hidden');
+  if (dash)   dash.classList.add('hidden');
+  if (game)   game.classList.add('hidden');
+  if (bg)     bg.style.display = '';
+  if (chbg)   chbg.style.display = '';
+  if (ver)    ver.style.display = '';
+  if (bar)    bar.style.display = '';
+}
+
+/* Ocultar elementos auth al entrar al dashboard */
+function hideAuthUI() {
+  const bg   = document.getElementById('auth-bg-layer');
+  const chbg = document.getElementById('auth-change-bg');
+  const ver  = document.querySelector('.auth-ver');
+  const bar  = document.getElementById('auth-bar');
+  if (bg)   bg.style.display   = 'none';
+  if (chbg) chbg.style.display = 'none';
+  if (ver)  ver.style.display  = 'none';
+  if (bar)  bar.style.display  = 'none';
+}
+
+/* ── doLogin con Supabase ── */
+async function doLogin() {
+  const user = document.getElementById('lu')?.value.trim() || '';
+  const pass = document.getElementById('lp')?.value || '';
+  const err  = document.getElementById('login-err');
+  if (!user || !pass) { err.textContent = 'Completa usuario y contraseña.'; return; }
+
+  err.textContent = '⏳ Ingresando...';
+  try {
+    // Intentar login con email (si tiene @) o buscar por username
+    const isEmail = user.includes('@');
+    let email = user;
+
+    if (!isEmail) {
+      // Buscar el correo asociado al username en jugadores
+      const { data, error } = await window._sb
+        .from('jugadores')
+        .select('correo')
+        .eq('usuario', user)
+        .maybeSingle();
+      if (error || !data) { err.textContent = '❌ Usuario no encontrado.'; return; }
+      email = data.correo;
+    }
+
+    const { error: authErr } = await window._sb.auth.signInWithPassword({ email, password: pass });
+    if (authErr) { err.textContent = '❌ ' + (authErr.message || 'Error al ingresar.'); return; }
+
+    err.textContent = '';
+    hideAuthUI();
+    document.getElementById('login').classList.add('hidden');
+    enterDash(user);
+  } catch(e) {
+    err.textContent = '❌ Error de conexión.';
+  }
+}
+
+/* ── doReg con Supabase ── */
+async function doReg() {
+  const usuario = document.getElementById('ru')?.value.trim() || '';
+  const correo  = document.getElementById('re')?.value.trim() || '';
+  const tel     = document.getElementById('rt')?.value.trim() || '';
+  const region  = document.getElementById('rr')?.value || '';
+  const pass    = document.getElementById('rp')?.value || '';
+  const pass2   = document.getElementById('rp2')?.value || '';
+  const tos     = document.getElementById('rtos')?.checked;
+  const err     = document.getElementById('reg-err');
+
+  // Validaciones básicas
+  if (usuario.length < 3)          { err.textContent = '❌ El usuario debe tener al menos 3 caracteres.'; return; }
+  if (!correo.includes('@'))       { err.textContent = '❌ Correo electrónico inválido.'; return; }
+  if (pass.length < 4)             { err.textContent = '❌ La contraseña debe tener al menos 4 caracteres.'; return; }
+  if (pass !== pass2)              { err.textContent = '❌ Las contraseñas no coinciden.'; return; }
+  if (!tos)                        { err.textContent = '❌ Debes aceptar los términos y condiciones.'; return; }
+
+  err.textContent = '⏳ Creando cuenta...';
+  try {
+    // 1. Crear usuario en Supabase Auth
+    const { data: authData, error: authErr } = await window._sb.auth.signUp({
+      email: correo,
+      password: pass,
+      options: { data: { usuario } }
+    });
+    if (authErr) { err.textContent = '❌ ' + (authErr.message || 'Error al registrar.'); return; }
+
+    const authUserId = authData.user?.id;
+    if (!authUserId) { err.textContent = '❌ No se pudo crear el usuario.'; return; }
+
+    // 2. Insertar en tabla jugadores
+    const { error: dbErr } = await window._sb.from('jugadores').insert({
+      auth_user_id:  authUserId,
+      usuario:       usuario,
+      correo:        correo,
+      telefono:      tel || null,
+      region:        region || null,
+      metodo_auth:   'email',
+    });
+    if (dbErr) { err.textContent = '❌ ' + (dbErr.message || 'Error al guardar perfil.'); return; }
+
+    err.style.color = '#44ff88';
+    err.textContent = '✅ ¡Cuenta creada! Revisa tu correo si se requiere confirmación.';
+    setTimeout(() => {
+      err.style.color = '';
+      err.textContent = '';
+      switchAuthTab('login');
+      const lu = document.getElementById('lu');
+      if (lu) lu.value = usuario;
+    }, 2800);
+  } catch(e) {
+    err.textContent = '❌ Error de conexión.';
+  }
+}
+
+/* ── OAuth placeholders ── */
+function doLoginGoogle()   { showToast('Google OAuth próximamente 🔧', '#7ab8ff'); }
+function doLoginFacebook() { showToast('Facebook OAuth próximamente 🔧', '#1877f2'); }
+
+/* ── showReg (compatibilidad con código existente) ── */
+function showReg() { switchAuthTab('reg'); }
+</script>
 
 
 <!-- ═══ DASHBOARD SHELL ═══ -->
@@ -184,21 +646,16 @@
 
       <!-- HOME -->
       <div class="page home-fullscreen" id="page-home">
-        <!-- Fondo: imagen o gradiente por defecto -->
         <div class="home-bg" id="home-bg">
           <div class="home-bg-overlay"></div>
         </div>
-        <!-- Título top-left -->
         <div class="home-title-block">
           <div class="home-game-title">PenguBrawl</div>
-          <div class="home-game-sub">Arena Edition · 9 Personajes · v1.0.7.5</div>
+          <div class="home-game-sub">Arena Edition · 9 Personajes · v1.0.8.5</div>
         </div>
-        <!-- Botón cambiar fondo (arriba derecha) -->
         <button class="home-bg-btn" onclick="document.getElementById('home-bg-input').click()" title="Cambiar imagen de fondo">🖼️</button>
         <input type="file" id="home-bg-input" accept="image/*" style="display:none" onchange="setHomeBg(this)">
-        <!-- Panel inferior derecha: amigos + botón jugar -->
         <div class="home-bottom-right">
-          <!-- Amigos -->
           <div class="home-friends-panel" id="home-friends-panel">
             <div class="home-friends-header">
               <span class="home-friends-label">👥 Amigos</span>
@@ -223,7 +680,6 @@
               <button class="home-friend-invite" disabled title="No disponible">—</button>
             </div>
           </div>
-          <!-- Botón JUGAR -->
           <button class="home-play-btn" onclick="navTo('modesel')">⚔️ JUGAR</button>
         </div>
       </div>
@@ -254,7 +710,6 @@
       <!-- DOMINIO POLAR -->
       <div class="page hidden" id="page-dominio">
         <div class="page-header"><div><div class="page-title">🏆 Dominio Polar</div><div class="page-sub">Temporada 1 · Modo Clasificado · Sube de rango</div></div></div>
-        <!-- buildDominio() construye el layout completo aquí -->
       </div>
 
       <!-- PROFILE -->
@@ -340,7 +795,6 @@
       <!-- AJUSTES -->
       <div class="page hidden" id="page-ajustes">
         <div class="page-header"><div><div class="page-title">⚙️ Ajustes</div><div class="page-sub">Personaliza tu experiencia de juego</div></div></div>
-        <!-- buildAjustes() construye el contenido aquí -->
       </div>
 
     </div><!-- /content -->
@@ -388,8 +842,8 @@
     <div class="modal-title">🔔 Notificaciones</div>
     <button class="modal-close" onclick="closeModal('notif-modal')">✕</button>
     <div class="notif-item"><div class="notif-dot"></div><div class="notif-icon">🏹</div><div class="notif-body"><div class="nt">Guerrero disponible</div><div class="ns">Un nuevo pingüino guerrero llega a la arena con lanza dorada y capa épica.</div><div class="nd">Hace 2h</div></div></div>
-    <div class="notif-item"><div class="notif-dot"></div><div class="notif-icon">🌿</div><div class="notif-body"><div class="nt">Notas v1.0.7.5</div><div class="ns">🌿 Naturaleza: nueva maga con tierra, enredaderas y torbellino. Pasivas rediseñadas: Polar ralentiza, Chili quema, Eléctrico electrocuta, Velocista acumula distancia, Guerrero ataca lento a distancia.</div><div class="nd">Hace 1h</div></div></div>
-    <div class="notif-item"><div class="notif-icon">📜</div><div class="notif-body"><div class="nt">Historial de versiones</div><div class="ns">v1.0.6.0 → Dashboard. v1.0.5.0 → Login/Menú. v1.0.4.0 → Fortachón. v1.0.3.0 → Elemental. v1.0.2.0 → Arbustos/Controles.</div><div class="nd">Ayer</div></div></div>
+    <div class="notif-item"><div class="notif-dot"></div><div class="notif-icon">🌿</div><div class="notif-body"><div class="nt">Notas v1.0.8.5</div><div class="ns">🌿 Naturaleza: nueva maga con tierra, enredaderas y torbellino. Login rediseñado con modal.</div><div class="nd">Hace 1h</div></div></div>
+    <div class="notif-item"><div class="notif-icon">📜</div><div class="notif-body"><div class="nt">Historial de versiones</div><div class="ns">v1.0.7.5 → Guerrero. v1.0.6.0 → Dashboard. v1.0.5.0 → Login/Menú.</div><div class="nd">Ayer</div></div></div>
   </div>
 </div>
 <!-- Egg reveal modal -->
@@ -403,7 +857,6 @@
     <button class="btn btn-p" onclick="closeModal('egg-modal')">¡Genial! 🎉</button>
   </div>
 </div>
-
 <!-- Alerts -->
 <div class="modal-overlay hidden" id="alerts-modal" onclick="closeModalOutside(event,this)">
   <div class="modal-box">
@@ -432,21 +885,18 @@
       </div>
       <button class="modal-close" onclick="closeModal('chat-modal')" style="position:relative;top:0;right:0">✕</button>
     </div>
-    <!-- Global (solo admins escriben) -->
     <div class="chat-panel" id="chat-panel-global">
       <div class="chat-admin-notice">🛡️ Solo los administradores pueden escribir en el chat global</div>
       <div class="chat-msgs-wrap" id="chat-msgs-global">
-        <div class="chat-msg"><div><div class="chat-sender chat-admin-badge">🛡️ Admin · PolarDev</div><div class="chat-bubble">¡Bienvenidos a PenguBrawl v1.0.7.5! Nuevo personaje Naturaleza disponible 🌿</div></div></div>
+        <div class="chat-msg"><div><div class="chat-sender chat-admin-badge">🛡️ Admin · PolarDev</div><div class="chat-bubble">¡Bienvenidos a PenguBrawl v1.0.8.5! Login rediseñado con modal 🐧</div></div></div>
         <div class="chat-msg"><div><div class="chat-sender chat-admin-badge">🛡️ Admin · PolarDev</div><div class="chat-bubble">Mantenimiento programado el sábado a las 3 AM. El servidor estará caído ~30 min.</div></div></div>
         <div class="chat-msg"><div><div class="chat-sender chat-admin-badge">🛡️ Admin · IceBalance</div><div class="chat-bubble">Chili recibe nerf de velocidad en el próximo parche. Polar buff de armadura +15%.</div></div></div>
       </div>
-      <!-- Input solo si es admin, oculto por defecto -->
       <div class="chat-input-row" id="chat-global-input" style="display:none">
         <input class="chat-input" id="chat-in-global" placeholder="Mensaje global (admin)..." maxlength="200" onkeydown="if(event.key==='Enter')sendChatGlobal()">
         <button class="btn btn-p btn-sm" onclick="sendChatGlobal()">Enviar</button>
       </div>
     </div>
-    <!-- Amigos -->
     <div class="chat-panel hidden" id="chat-panel-amigos">
       <div class="chat-friends-list" id="chat-friends-list">
         <div class="chat-friend-item active-chat" onclick="openFriendChat('PollarBrawler')">
@@ -471,7 +921,19 @@
     </div>
   </div>
 </div>
+
+<!-- ═══ SCRIPTS ═══ -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script>
+  // Inicializar cliente Supabase y exponerlo en window._sb
+  (function() {
+    const { createClient } = supabase;
+    window._sb = createClient(
+      'https://uqtoprfpfgxejdvsmlvo.supabase.co',
+      'sb_publishable_AyjHbCHVb0OSu5_6JSVIug_QB7P8QkH'
+    );
+  })();
+</script>
 <script src="js/supabase-client.js"></script>
 <script src="js/auth.js"></script>
 <script src="js/perfil_monedero.js"></script>

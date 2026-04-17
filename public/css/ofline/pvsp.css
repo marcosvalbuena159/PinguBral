@@ -1,0 +1,354 @@
+/* ══════════════════════════════════════════════════════════
+   pvsp.css — Estilos de la partida (PvP / Juego en vivo)
+   PenguBrawl v1.0.8.5
+   Contiene: game-wrap, HUD, barras de vida, habilidades,
+             resultados finales, controles, efectos in-game.
+   ══════════════════════════════════════════════════════════ */
+
+/* ── CONTENEDOR PRINCIPAL DEL JUEGO ── */
+#game-wrap {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: #04050f;
+}
+#game-wrap.hidden {
+  display: none !important;
+}
+
+/* ── CANVAS ── */
+#game-inner {
+  position: relative;
+}
+#cv {
+  display: block;
+  border-radius: 14px;
+  box-shadow:
+    0 0 48px rgba(60, 120, 255, 0.15),
+    0 0 0 1px rgba(100, 150, 255, 0.1);
+}
+
+/* ══════ HUD — cabecera sobre el canvas ══════ */
+#hud {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  pointer-events: none;
+  padding: 8px 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+/* Panel de jugador (izquierda / derecha) */
+.hudp {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  pointer-events: all;
+}
+.hudp.r {
+  align-items: flex-end;
+}
+
+/* Nombre del jugador en HUD */
+.pn {
+  font-family: 'Fredoka One', cursive;
+  font-size: 13px;
+  color: #fff;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.8);
+}
+
+/* ── Barra de vida ── */
+.hb {
+  width: 155px;
+  height: 10px;
+  background: rgba(0, 0, 0, 0.5);
+  border-radius: 5px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+.hf {
+  height: 100%;
+  border-radius: 5px;
+  transition: width 0.15s;
+}
+
+/* ── Barra de escudo / buff ── */
+.bb {
+  width: 155px;
+  height: 6px;
+  background: rgba(0, 0, 0, 0.42);
+  border-radius: 3px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+}
+.bf {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.17s;
+}
+
+/* ── Barra de recarga (cooldown global) ── */
+.rb2 {
+  width: 155px;
+  height: 5px;
+  background: rgba(0, 0, 0, 0.38);
+  border-radius: 3px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+.rf2 {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.1s;
+}
+.rl2 {
+  font-size: 8px;
+  color: rgba(255, 255, 255, 0.38);
+  font-weight: 700;
+}
+
+/* ══════ HABILIDADES (skill bar) ══════ */
+.skr {
+  display: flex;
+  gap: 3px;
+  margin-top: 2px;
+}
+.sk {
+  width: 33px;
+  height: 33px;
+  border-radius: 7px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  border: 1.5px solid rgba(255, 255, 255, 0.2);
+  background: rgba(0, 0, 0, 0.4);
+  position: relative;
+  overflow: hidden;
+}
+/* Overlay de cooldown */
+.sk.cd::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.62);
+}
+/* Número de cooldown sobre el ícono */
+.skcd {
+  position: absolute;
+  font-size: 8px;
+  font-weight: 900;
+  color: #fff;
+  z-index: 2;
+}
+/* Tecla de acceso rápido */
+.skk {
+  position: absolute;
+  bottom: 1px;
+  right: 2px;
+  font-size: 6px;
+  color: rgba(255, 255, 255, 0.4);
+  z-index: 3;
+}
+/* Indicador de buff activo */
+.bi {
+  font-size: 8px;
+  font-weight: 700;
+  color: rgba(100, 230, 80, 0.82);
+  display: none;
+}
+
+/* ══════ BARRA DE ESTADÍSTICAS CENTRAL ══════ */
+#statsbar {
+  position: absolute;
+  top: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 14px;
+  pointer-events: none;
+  z-index: 10;
+}
+.statbox {
+  background: rgba(0, 0, 0, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 9px;
+  padding: 4px 10px;
+  text-align: center;
+  min-width: 68px;
+}
+.sname {
+  font-size: 7px;
+  color: rgba(255, 255, 255, 0.4);
+  font-weight: 700;
+  text-transform: uppercase;
+}
+.sval {
+  font-family: 'Fredoka One', cursive;
+  font-size: 13px;
+  color: #fff;
+}
+.ssub {
+  font-size: 7px;
+  color: rgba(255, 255, 255, 0.3);
+}
+
+/* ══════ PANTALLA DE RESULTADOS FINALES ══════ */
+#ro {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+#ro.hidden {
+  display: none !important;
+}
+#rb {
+  background: rgba(4, 5, 15, 0.94);
+  backdrop-filter: blur(10px);
+  border-radius: 15px;
+  width: 460px;
+  padding: 26px 34px;
+  text-align: center;
+  border: 1.5px solid rgba(255, 255, 255, 0.11);
+}
+#rb h2 {
+  font-family: 'Fredoka One', cursive;
+  font-size: 28px;
+  color: #fff;
+  margin-bottom: 4px;
+}
+#rb .rmsg {
+  color: rgba(255, 255, 255, 0.46);
+  font-size: 11px;
+  margin-bottom: 14px;
+}
+
+/* Tabla de estadísticas finales */
+.fstats {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 14px;
+  font-size: 11px;
+}
+.fstats th {
+  color: rgba(255, 255, 255, 0.35);
+  font-weight: 700;
+  padding: 4px 8px;
+  text-align: center;
+  font-size: 9px;
+  text-transform: uppercase;
+}
+.fstats td {
+  padding: 5px 8px;
+  text-align: center;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+.fstats .pnc {
+  font-family: 'Fredoka One', cursive;
+  font-size: 12px;
+}
+
+/* Botones de resultado */
+.rbtns {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+
+/* ══════ BARRA DE CONTROLES (debajo del canvas) ══════ */
+#game-cbar {
+  position: absolute;
+  bottom: -28px;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  gap: 18px;
+  color: rgba(255, 255, 255, 0.28);
+  font-size: 9px;
+}
+.ctrl {
+  text-align: center;
+}
+.ctrl strong {
+  display: block;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.5);
+  margin-bottom: 2px;
+}
+/* Tecla de teclado visual */
+.k {
+  display: inline-block;
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.13);
+  border-radius: 3px;
+  padding: 1px 4px;
+  font-size: 7px;
+  color: rgba(255, 255, 255, 0.65);
+  font-weight: 700;
+}
+
+/* ══════ HABILIDADES ESPECIALES POR PERSONAJE ══════ */
+
+/* Campos de Fuerza — barra de escudo */
+.cf-shield-bar {
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(160, 120, 255, 0.15);
+  margin-top: 2px;
+  overflow: hidden;
+}
+.cf-shield-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #7a44cc, #c0a0ff);
+  border-radius: 2px;
+  transition: width 0.3s;
+}
+
+/* ══════ ESTADOS DE ÍTEMS IN-GAME ══════ */
+
+/* Tienda — ítem ya comprado */
+.shop-item.owned-item {
+  opacity: 0.7;
+}
+.shop-item.owned-item .shop-item-prev {
+  border: 1px solid rgba(100, 255, 100, 0.2);
+}
+.shop-item.owned-item button {
+  background: rgba(60, 200, 60, 0.1);
+  color: #44ff88;
+  cursor: default;
+  border: 1px solid rgba(60, 200, 60, 0.2);
+}
+
+/* Guarida — ítem poseído */
+.skin-card2.owned .skin-prev2 {
+  border: 1px solid rgba(100, 255, 100, 0.3);
+}
+.other-card2.owned {
+  border-color: rgba(100, 255, 100, 0.2);
+}
+
+/* ══════ SELECCIÓN DE PERSONAJE ══════ */
+
+/* Char select — bloqueado */
+.cc2.locked {
+  opacity: 0.75;
+  position: relative;
+  cursor: default;
+}
+
+/* ══════ TOAST DE NOTIFICACIÓN IN-GAME ══════ */
+#pb-toast {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+}
