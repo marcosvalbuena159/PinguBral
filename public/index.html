@@ -11,7 +11,6 @@
 <link rel="stylesheet" href="css/misiones.css">
 <link rel="stylesheet" href="css/perfil.css">
 <link rel="stylesheet" href="css/tienda.css">
-<link rel="stylesheet" href="css/ofline/pvsp.css">
 <style>
 /* ══════════════════════════════════════════════
    AUTH REDESIGN — Modal centrado sobre fondo
@@ -535,16 +534,16 @@ async function doReg() {
   const tos     = document.getElementById('rtos')?.checked;
   const err     = document.getElementById('reg-err');
 
-  // Validaciones básicas
-  if (usuario.length < 3)          { err.textContent = '❌ El usuario debe tener al menos 3 caracteres.'; return; }
-  if (!correo.includes('@'))       { err.textContent = '❌ Correo electrónico inválido.'; return; }
-  if (pass.length < 4)             { err.textContent = '❌ La contraseña debe tener al menos 4 caracteres.'; return; }
-  if (pass !== pass2)              { err.textContent = '❌ Las contraseñas no coinciden.'; return; }
-  if (!tos)                        { err.textContent = '❌ Debes aceptar los términos y condiciones.'; return; }
+  // Validaciones
+  if (usuario.length < 3)    { err.textContent = '❌ El usuario debe tener al menos 3 caracteres.'; return; }
+  if (!correo.includes('@')) { err.textContent = '❌ Correo electrónico inválido.'; return; }
+  if (pass.length < 4)       { err.textContent = '❌ La contraseña debe tener al menos 4 caracteres.'; return; }
+  if (pass !== pass2)        { err.textContent = '❌ Las contraseñas no coinciden.'; return; }
+  if (!tos)                  { err.textContent = '❌ Debes aceptar los términos y condiciones.'; return; }
 
   err.textContent = '⏳ Creando cuenta...';
   try {
-    // 1. Crear usuario en Supabase Auth
+    // ── PASO 1: Registrar en Supabase Auth ──────────────────────────────────
     const { data: authData, error: authErr } = await window._sb.auth.signUp({
       email: correo,
       password: pass,
@@ -553,19 +552,37 @@ async function doReg() {
     if (authErr) { err.textContent = '❌ ' + (authErr.message || 'Error al registrar.'); return; }
 
     const authUserId = authData.user?.id;
-    if (!authUserId) { err.textContent = '❌ No se pudo crear el usuario.'; return; }
+    if (!authUserId) { err.textContent = '❌ No se pudo obtener el ID del usuario.'; return; }
 
-    // 2. Insertar en tabla jugadores
-    const { error: dbErr } = await window._sb.from('jugadores').insert({
-      auth_user_id:  authUserId,
-      usuario:       usuario,
-      correo:        correo,
-      telefono:      tel || null,
-      region:        region || null,
-      metodo_auth:   'email',
+    // ── PASO 2: Insertar perfil via RPC (security definer, bypasa RLS) ──────
+    // Requiere haber creado la función SQL "registrar_jugador" en Supabase.
+    // Ver: INSTRUCCIONES SQL al final de este archivo.
+    const { error: rpcErr } = await window._sb.rpc('registrar_jugador', {
+      p_auth_user_id: authUserId,
+      p_usuario:      usuario,
+      p_correo:       correo,
+      p_telefono:     tel     || null,
+      p_region:       region  || null,
     });
-    if (dbErr) { err.textContent = '❌ ' + (dbErr.message || 'Error al guardar perfil.'); return; }
 
+    if (rpcErr) {
+      // Si la función RPC no existe todavía, intento directo como fallback
+      if (rpcErr.code === '42883') {
+        const { error: insertErr } = await window._sb.from('jugadores').insert({
+          auth_user_id: authUserId,
+          usuario, correo,
+          telefono:   tel    || null,
+          region:     region || null,
+          metodo_auth: 'email',
+        });
+        if (insertErr) { err.textContent = '❌ ' + insertErr.message; return; }
+      } else {
+        err.textContent = '❌ ' + (rpcErr.message || 'Error al guardar perfil.');
+        return;
+      }
+    }
+
+    // ── PASO 3: Confirmar al usuario ────────────────────────────────────────
     err.style.color = '#44ff88';
     err.textContent = '✅ ¡Cuenta creada! Revisa tu correo si se requiere confirmación.';
     setTimeout(() => {
@@ -575,8 +592,10 @@ async function doReg() {
       const lu = document.getElementById('lu');
       if (lu) lu.value = usuario;
     }, 2800);
+
   } catch(e) {
     err.textContent = '❌ Error de conexión.';
+    console.error('doReg error:', e);
   }
 }
 
@@ -924,18 +943,25 @@ function showReg() { switchAuthTab('reg'); }
 </div>
 
 <!-- ═══ SCRIPTS ═══ -->
+<!--
+  supabase-client.js debe exponer el cliente como window._sb  (o window.supabaseClient).
+  Si tu archivo usa otro nombre, ajusta el alias en el bloque de abajo.
+-->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-<script>
-  // Inicializar cliente Supabase y exponerlo en window._sb
-  (function() {
-    const { createClient } = supabase;
-    window._sb = createClient(
-      'https://uqtoprfpfgxejdvsmlvo.supabase.co',
-      'sb_publishable_AyjHbCHVb0OSu5_6JSVIug_QB7P8QkH'
-    );
-  })();
-</script>
 <script src="js/supabase-client.js"></script>
+<script>
+  // Alias: si supabase-client.js expone window.supabaseClient en vez de window._sb,
+  // lo normalizamos aquí para que doLogin/doReg funcionen.
+  if (!window._sb && window.supabaseClient) window._sb = window.supabaseClient;
+  // Si aún no existe (supabase-client.js usa otro nombre), creamos como fallback de último recurso.
+  if (!window._sb) {
+    window._sb = supabase.createClient(
+      'https://uqtoprfpfgxejdvsmlvo.supabase.co',
+      'sb_publishable_AyjHbCHVb0OSu5_6JSVIug_QB7P8QkH',
+      { auth: { storageKey: 'pb-auth' } } // storageKey único para evitar conflicto GoTrueClient
+    );
+  }
+</script>
 <script src="js/auth.js"></script>
 <script src="js/perfil_monedero.js"></script>
 <script src="js/ofline/pvsp.js"></script>
