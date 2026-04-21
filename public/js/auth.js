@@ -1,176 +1,296 @@
-// ============================================================
-//  auth.js — Login · Registro completo · OAuth · Sesión
-//  Campos: usuario, correo, teléfono, región, contraseña x2,
-//          términos y condiciones, Google, Facebook
-// ============================================================
+// ================================================================
+//  PENGUBRAWL — auth.js  v1.0.8.5
+//  Maneja: sesión persistente, enterDash, logout, y helpers auth.
+//  Se carga ANTES del override doLogin al final del body.
+// ================================================================
 
-function authLoading(on){
-  const bar=document.getElementById('auth-bar');
-  if(bar){bar.style.width=on?'100%':'0';bar.style.transition=on?'width 1.2s ease':'none';}
-}
-function showErr(id,msg,ok=false){
-  const el=document.getElementById(id);if(!el)return;
-  el.textContent=msg;el.style.display=msg?'block':'none';el.style.color=ok?'#66ff88':'#ff6b6b';
-}
-function clearErr(id){showErr(id,'');}
+/* ── 1. CONSTANTES ─────────────────────────────────────────────── */
+const PB_SESSION_KEY = 'pb-auth';   // storageKey del cliente Supabase
+const PB_USER_KEY    = 'pb_user';   // nombre del jugador guardado localmente
 
-function showLogin(){
-  _show('login');_hide('register');_hide('dashboard');clearErr('li-err');
-  document.getElementById('li-u').value='';document.getElementById('li-p').value='';
-}
-function showReg(){_hide('login');_show('register');clearErr('reg-err');}
-function _show(id){document.getElementById(id)?.classList.remove('hidden');}
-function _hide(id){document.getElementById(id)?.classList.add('hidden');}
+/* ── 2. ESPERA A QUE EL DOM ESTÉ LISTO ─────────────────────────── */
+document.addEventListener('DOMContentLoaded', () => {
+  initAuth();
+});
 
-async function cargarJugador(authUserId){
-  const{data:jugador,error}=await window.sb.from('jugadores').select('*').eq('auth_user_id',authUserId).single();
-  if(error||!jugador){console.error('cargarJugador:',error);return null;}
-  window.PB.jugador=jugador;
-  const{data:monedero}=await window.sb.from('monedero_jugador').select('*').eq('jugador_id',jugador.id).single();
-  window.PB.monedero=monedero??{peces:0,krill:0,piedras:0,perlas:0};
-  return jugador;
-}
-
-async function abrirDashboard(authUserId){
-  const jugador=await cargarJugador(authUserId);
-  if(!jugador){showErr('li-err','No se encontró tu perfil. Contacta soporte.');authLoading(false);showLogin();return;}
-  _hide('login');_hide('register');_show('dashboard');
-  const tbName=document.getElementById('tb-pname');if(tbName)tbName.textContent=jugador.usuario;
-  if(typeof initPerfilMonedero==='function')initPerfilMonedero();
-  if(typeof navTo==='function')navTo('home');
-  console.log('✅ Sesión iniciada:',jugador.usuario);
-}
-
-async function doLogin(){
-  clearErr('li-err');
-  const usuario=document.getElementById('li-u').value.trim();
-  const pass=document.getElementById('li-p').value;
-  if(!usuario||!pass){showErr('li-err','Completa usuario y contraseña.');return;}
-  authLoading(true);
-  try{
-    const{data:row,error:e1}=await window.sb.from('jugadores').select('correo').eq('usuario',usuario).single();
-    if(e1||!row){showErr('li-err','Usuario no encontrado.');authLoading(false);return;}
-    const{data,error}=await window.sb.auth.signInWithPassword({email:row.correo,password:pass});
-    if(error){showErr('li-err',_tradErr(error.message));authLoading(false);return;}
-    window.PB.session=data.session;
-    await abrirDashboard(data.user.id);
-  }catch(e){showErr('li-err','Error de conexión.');console.error(e);}
-  authLoading(false);
-}
-
-async function doGuest(){
-  clearErr('li-err');authLoading(true);
-  const alias='Invitado_'+Math.floor(Math.random()*9999);
-  const{data,error}=await window.sb.auth.signInAnonymously();
-  if(error){
-    window.PB.jugador={id:'guest',usuario:alias,nivel_jugador:1,region:'—',codigo_perfil:'GUEST'};
-    window.PB.monedero={peces:500,krill:100,piedras:0,perlas:0};window.PB.session=null;
-    _hide('login');_show('dashboard');
-    const tbName=document.getElementById('tb-pname');if(tbName)tbName.textContent=alias;
-    if(typeof initPerfilMonedero==='function')initPerfilMonedero();
-    if(typeof navTo==='function')navTo('home');authLoading(false);
-    showToast('👤 Entrando como invitado (sin guardar progreso)','#aaa');return;
+/* ── 3. INICIALIZACIÓN DE AUTENTICACIÓN ─────────────────────────── */
+async function initAuth() {
+  const sb = window._sb;
+  if (!sb) {
+    // Supabase aún no cargó; esperar un tick y reintentar
+    setTimeout(initAuth, 150);
+    return;
   }
-  window.PB.session=data.session;
-  window.PB.jugador={id:data.user.id,usuario:alias,nivel_jugador:1,region:'—',codigo_perfil:'GUEST'};
-  window.PB.monedero={peces:500,krill:100,piedras:0,perlas:0};
-  _hide('login');_show('dashboard');
-  if(typeof initPerfilMonedero==='function')initPerfilMonedero();
-  if(typeof navTo==='function')navTo('home');authLoading(false);
-}
 
-async function doReg(){
-  clearErr('reg-err');
-  const usuario =document.getElementById('ru')?.value.trim()??'';
-  const correo  =document.getElementById('re')?.value.trim()??'';
-  const tel     =document.getElementById('rt-')?.value.trim()??'';
-  const region  =document.getElementById('rr')?.value??'';
-  const pass1   =document.getElementById('rp')?.value??'';
-  const pass2   =document.getElementById('rp2')?.value??'';
-  const terminos=document.getElementById('rtos')?.checked??false;
-
-  if(usuario.length<3){showErr('reg-err','El usuario debe tener mínimo 3 caracteres.');return;}
-  if(!/^[a-zA-Z0-9_]+$/.test(usuario)){showErr('reg-err','Usuario: solo letras, números y guión bajo.');return;}
-  if(correo&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo)){showErr('reg-err','Ingresa un correo válido.');return;}
-  if(pass1.length<4){showErr('reg-err','La contraseña debe tener mínimo 4 caracteres.');return;}
-  if(pass1!==pass2){showErr('reg-err','Las contraseñas no coinciden.');return;}
-  if(!terminos){showErr('reg-err','Debes aceptar los términos y condiciones.');return;}
-
-  authLoading(true);
-  try{
-    const{data:existe}=await window.sb.from('jugadores').select('id').eq('usuario',usuario).maybeSingle();
-    if(existe){showErr('reg-err','Ese nombre de usuario ya está en uso.');authLoading(false);return;}
-    const emailAuth=correo||`${usuario.toLowerCase()}@pengubrawl.game`;
-    const{data,error}=await window.sb.auth.signUp({email:emailAuth,password:pass1});
-    if(error){showErr('reg-err',_tradErr(error.message));authLoading(false);return;}
-    const{error:ie}=await window.sb.from('jugadores').insert({
-      auth_user_id:data.user.id,usuario,correo:emailAuth,
-      telefono:tel||null,region:region||null,metodo_auth:'email',
-    });
-    if(ie){showErr('reg-err','Error al crear perfil: '+ie.message);authLoading(false);return;}
-    window.PB.session=data.session;
-    if(data.session){await abrirDashboard(data.user.id);}
-    else{
-      showErr('reg-err','✅ Cuenta creada. Iniciando sesión...',true);
-      const{data:ld,error:le}=await window.sb.auth.signInWithPassword({email:emailAuth,password:pass1});
-      if(!le&&ld.session){window.PB.session=ld.session;await abrirDashboard(ld.user.id);}
-      else setTimeout(showLogin,2500);
+  // Escuchar cambios de sesión (login, logout, token refresh)
+  sb.auth.onAuthStateChange(async (event, session) => {
+    if (event === 'SIGNED_IN' && session?.user) {
+      await onSignedIn(session.user);
+    } else if (event === 'SIGNED_OUT') {
+      onSignedOut();
+    } else if (event === 'TOKEN_REFRESHED' && session?.user) {
+      // Silencioso — sesión ya activa, solo actualizar estado
+      window.currentAuthUser = session.user;
     }
-  }catch(e){showErr('reg-err','Error de conexión. Intenta de nuevo.');console.error(e);}
-  authLoading(false);
+  });
+
+  // Verificar sesión existente al cargar la página
+  try {
+    const { data: { session } } = await sb.auth.getSession();
+    if (session?.user) {
+      await onSignedIn(session.user);
+    } else {
+      showLogin();
+    }
+  } catch (err) {
+    console.warn('[auth.js] getSession error:', err);
+    showLogin();
+  }
 }
 
-async function doLoginGoogle(){
-  authLoading(true);
-  const{error}=await window.sb.auth.signInWithOAuth({provider:'google',options:{redirectTo:window.location.origin}});
-  if(error){showErr('li-err','Error con Google: '+error.message);authLoading(false);}
+/* ── 4. EVENTO: SESIÓN INICIADA ─────────────────────────────────── */
+async function onSignedIn(authUser) {
+  window.currentAuthUser = authUser;
+
+  try {
+    const sb = window._sb;
+    // Obtener datos del jugador desde la tabla jugadores
+    const { data: jugador, error } = await sb
+      .from('jugadores')
+      .select('usuario, nivel_jugador, icono_id, pinguino_fav1_id, pinguino_fav2_id, pinguino_fav3_id')
+      .eq('auth_user_id', authUser.id)
+      .maybeSingle();
+
+    if (error) {
+      console.warn('[auth.js] Error obteniendo jugador:', error.message);
+    }
+
+    const displayName = jugador?.usuario
+      || authUser.user_metadata?.usuario
+      || authUser.email?.split('@')[0]
+      || 'Jugador';
+
+    window.currentUser = displayName;
+
+    // Guardar para restauración rápida
+    try { localStorage.setItem(PB_USER_KEY, displayName); } catch(_) {}
+
+    hideAuthUI();
+    document.getElementById('login')?.classList.add('hidden');
+
+    if (typeof enterDash === 'function') {
+      enterDash(displayName, jugador);
+    }
+  } catch (err) {
+    console.error('[auth.js] onSignedIn error:', err);
+    // Entrar al dashboard de todas formas con info básica
+    const fallbackName = authUser.user_metadata?.usuario
+      || authUser.email?.split('@')[0]
+      || 'Jugador';
+    window.currentUser = fallbackName;
+    hideAuthUI();
+    document.getElementById('login')?.classList.add('hidden');
+    if (typeof enterDash === 'function') enterDash(fallbackName, null);
+  }
 }
 
-async function doLoginFacebook(){
-  authLoading(true);
-  const{error}=await window.sb.auth.signInWithOAuth({provider:'facebook',options:{redirectTo:window.location.origin}});
-  if(error){showErr('li-err','Error con Facebook: '+error.message);authLoading(false);}
-}
-
-async function _completarPerfilOAuth(user){
-  const{data:existe}=await window.sb.from('jugadores').select('id').eq('auth_user_id',user.id).maybeSingle();
-  if(existe)return;
-  const base=(user.user_metadata?.full_name||user.email||'Player').split(' ')[0].replace(/[^a-zA-Z0-9]/g,'');
-  const alias=base.slice(0,20)+'_'+Math.floor(Math.random()*999);
-  const proveedor=user.app_metadata?.provider==='google'?'google':'facebook';
-  await window.sb.from('jugadores').insert({auth_user_id:user.id,usuario:alias,correo:user.email??`${alias}@pengubrawl.game`,metodo_auth:proveedor});
-}
-
-async function doLogout(){
-  await window.sb.auth.signOut();
-  window.PB.session=null;window.PB.jugador=null;window.PB.monedero=null;
-  if(typeof resetPerfilCache==='function')resetPerfilCache();
+/* ── 5. EVENTO: SESIÓN CERRADA ──────────────────────────────────── */
+function onSignedOut() {
+  window.currentAuthUser = null;
+  window.currentUser     = null;
+  try { localStorage.removeItem(PB_USER_KEY); } catch(_) {}
   showLogin();
 }
 
-async function initAuth(){
-  const{data:{session}}=await window.sb.auth.getSession();
-  if(session){window.PB.session=session;await abrirDashboard(session.user.id);}
-  else showLogin();
-  window.sb.auth.onAuthStateChange(async(event,session)=>{
-    if(event==='SIGNED_IN'&&session){
-      window.PB.session=session;
-      const prov=session.user.app_metadata?.provider;
-      if(prov==='google'||prov==='facebook')await _completarPerfilOAuth(session.user);
-      const dash=document.getElementById('dashboard');
-      if(dash?.classList.contains('hidden'))await abrirDashboard(session.user.id);
-    }
-    if(event==='SIGNED_OUT'){window.PB.session=null;window.PB.jugador=null;showLogin();}
-    if(event==='TOKEN_REFRESHED'&&session)window.PB.session=session;
-  });
+/* ── 6. LOGOUT PÚBLICO ──────────────────────────────────────────── */
+async function doLogout() {
+  try {
+    const sb = window._sb;
+    if (sb) await sb.auth.signOut();
+  } catch(err) {
+    console.warn('[auth.js] signOut error:', err);
+  }
+  onSignedOut();
 }
 
-function _tradErr(msg){
-  if(!msg)return'Error desconocido.';
-  if(msg.includes('Invalid login credentials'))return'Usuario o contraseña incorrectos.';
-  if(msg.includes('Email not confirmed'))return'Confirma tu correo para ingresar.';
-  if(msg.includes('User already registered'))return'Ese correo ya está registrado.';
-  if(msg.includes('Password should be'))return'La contraseña debe tener mínimo 6 caracteres.';
-  if(msg.includes('rate limit'))return'Demasiados intentos. Espera un momento.';
-  return msg;
+/* ── 7. ENTER DASHBOARD ──────────────────────────────────────────
+   Muestra el dashboard y actualiza nombre en topbar / perfil.
+   jugadorData puede ser null si el jugador aún no tiene fila.
+   ─────────────────────────────────────────────────────────────── */
+function enterDash(username, jugadorData) {
+  const dash = document.getElementById('dashboard');
+  if (!dash) return;
+  dash.classList.remove('hidden');
+
+  // Topbar
+  const tbName = document.getElementById('tb-pname');
+  if (tbName) tbName.textContent = username || '—';
+
+  // Perfil
+  const profUname = document.getElementById('prof-uname');
+  if (profUname) profUname.textContent = username || '—';
+
+  // Cargar monedero si hay función disponible
+  if (typeof loadMonedero === 'function') {
+    loadMonedero().catch(() => {});
+  }
+
+  // Ir a la página de inicio por defecto
+  if (typeof navTo === 'function') {
+    navTo('home');
+  }
+
+  // Toast de bienvenida
+  if (typeof showToast === 'function') {
+    showToast(`¡Bienvenido, ${username}! 🐧`, '#44ff88');
+  }
+}
+
+/* ── 8. HELPERS DE VISIBILIDAD AUTH ─────────────────────────────── */
+// Estas funciones son usadas por index.html también — se definen aquí
+// como base y el inline del HTML puede sobreescribirlas.
+
+if (typeof showLogin === 'undefined') {
+  window.showLogin = function showLogin() {
+    const login = document.getElementById('login');
+    const dash  = document.getElementById('dashboard');
+    const game  = document.getElementById('game-wrap');
+    const bg    = document.getElementById('auth-bg-layer');
+    const chbg  = document.getElementById('auth-change-bg');
+    const ver   = document.querySelector('.auth-ver');
+    const bar   = document.getElementById('auth-bar');
+    if (login)  login.classList.remove('hidden');
+    if (dash)   dash.classList.add('hidden');
+    if (game)   game.classList.add('hidden');
+    if (bg)     bg.style.display = '';
+    if (chbg)   chbg.style.display = '';
+    if (ver)    ver.style.display = '';
+    if (bar)    bar.style.display = '';
+  };
+}
+
+if (typeof hideAuthUI === 'undefined') {
+  window.hideAuthUI = function hideAuthUI() {
+    const bg   = document.getElementById('auth-bg-layer');
+    const chbg = document.getElementById('auth-change-bg');
+    const ver  = document.querySelector('.auth-ver');
+    const bar  = document.getElementById('auth-bar');
+    if (bg)   bg.style.display   = 'none';
+    if (chbg) chbg.style.display = 'none';
+    if (ver)  ver.style.display  = 'none';
+    if (bar)  bar.style.display  = 'none';
+  };
+}
+
+/* ── 9. OAUTH PLACEHOLDERS (Google / Facebook) ───────────────────
+   Implementación base. Se puede activar en Supabase Dashboard →
+   Authentication → Providers. Solo se necesita habilitar el
+   proveedor y añadir las credenciales OAuth.
+   ─────────────────────────────────────────────────────────────── */
+async function doLoginGoogle() {
+  const sb = window._sb;
+  if (!sb) return;
+  try {
+    const { error } = await sb.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: window.location.origin }
+    });
+    if (error) {
+      if (typeof showToast === 'function') showToast('❌ ' + error.message, '#ff6666');
+      else console.error('[auth.js] Google OAuth error:', error.message);
+    }
+  } catch(err) {
+    if (typeof showToast === 'function') showToast('Google OAuth próximamente 🔧', '#7ab8ff');
+  }
+}
+
+async function doLoginFacebook() {
+  const sb = window._sb;
+  if (!sb) return;
+  try {
+    const { error } = await sb.auth.signInWithOAuth({
+      provider: 'facebook',
+      options: { redirectTo: window.location.origin }
+    });
+    if (error) {
+      if (typeof showToast === 'function') showToast('❌ ' + error.message, '#ff6666');
+      else console.error('[auth.js] Facebook OAuth error:', error.message);
+    }
+  } catch(err) {
+    if (typeof showToast === 'function') showToast('Facebook OAuth próximamente 🔧', '#1877f2');
+  }
+}
+
+/* ── 10. doLogin BASE (sobreescrito por el inline al final del body) ─
+   Esta versión base usa #lu y #lp igual que el override.
+   Al cargarse auth.js primero, esta queda como fallback.
+   El override inline en index.html la reemplaza correctamente.
+   ─────────────────────────────────────────────────────────────── */
+window.doLogin = async function doLogin() {
+  const user = (document.getElementById('lu')?.value || '').trim();
+  const pass  = document.getElementById('lp')?.value || '';
+  const err   = document.getElementById('login-err');
+  if (!err) return;
+
+  if (!user || !pass) { err.textContent = 'Completa usuario y contraseña.'; return; }
+  err.textContent = '⏳ Ingresando...';
+
+  try {
+    const sb = window._sb;
+    if (!sb) { err.textContent = '❌ Error: cliente no inicializado.'; return; }
+
+    let email = user;
+    if (!user.includes('@')) {
+      const { data, error: selErr } = await sb
+        .from('jugadores')
+        .select('correo')
+        .eq('usuario', user)
+        .maybeSingle();
+      if (selErr || !data) { err.textContent = '❌ Usuario no encontrado.'; return; }
+      email = data.correo;
+    }
+
+    const { error: authErr } = await sb.auth.signInWithPassword({ email, password: pass });
+    if (authErr) {
+      err.textContent = '❌ ' + (authErr.message || 'Contraseña incorrecta.');
+      return;
+    }
+    // onAuthStateChange → SIGNED_IN → onSignedIn se encarga del resto
+    err.textContent = '';
+  } catch(e) {
+    err.textContent = '❌ Error de conexión.';
+    console.error('[auth.js] doLogin error:', e);
+  }
+};
+
+/* ── 11. doReg BASE ────────────────────────────────────────────────
+   La versión completa ya está en el <script> inline de index.html.
+   Esta solo existe como fallback vacío para evitar errores si se
+   llama antes de que el inline esté definido.
+   ─────────────────────────────────────────────────────────────── */
+if (typeof window.doReg === 'undefined') {
+  window.doReg = function() {
+    console.warn('[auth.js] doReg: esperando versión inline del HTML...');
+  };
+}
+
+/* ── 12. showToast FALLBACK ─────────────────────────────────────── */
+if (typeof window.showToast === 'undefined') {
+  window.showToast = function showToast(msg, color) {
+    // Implementación mínima si main.js aún no cargó
+    const t = document.createElement('div');
+    t.textContent = msg;
+    Object.assign(t.style, {
+      position: 'fixed', bottom: '24px', left: '50%',
+      transform: 'translateX(-50%)',
+      background: color || '#333', color: '#fff',
+      padding: '10px 20px', borderRadius: '10px',
+      fontSize: '13px', fontFamily: 'Nunito, sans-serif',
+      zIndex: '9999', pointerEvents: 'none',
+      boxShadow: '0 4px 20px rgba(0,0,0,.4)',
+      transition: 'opacity .3s'
+    });
+    document.body.appendChild(t);
+    setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 350); }, 2400);
+  };
 }
