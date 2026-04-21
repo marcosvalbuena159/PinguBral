@@ -487,40 +487,10 @@ function hideAuthUI() {
   if (bar)  bar.style.display  = 'none';
 }
 
-/* ── doLogin con Supabase ── */
-async function doLogin() {
-  const user = document.getElementById('lu')?.value.trim() || '';
-  const pass = document.getElementById('lp')?.value || '';
-  const err  = document.getElementById('login-err');
-  if (!user || !pass) { err.textContent = 'Completa usuario y contraseña.'; return; }
-
-  err.textContent = '⏳ Ingresando...';
-  try {
-    // Intentar login con email (si tiene @) o buscar por username
-    const isEmail = user.includes('@');
-    let email = user;
-
-    if (!isEmail) {
-      // Buscar el correo asociado al username en jugadores
-      const { data, error } = await window._sb
-        .from('jugadores')
-        .select('correo')
-        .eq('usuario', user)
-        .maybeSingle();
-      if (error || !data) { err.textContent = '❌ Usuario no encontrado.'; return; }
-      email = data.correo;
-    }
-
-    const { error: authErr } = await window._sb.auth.signInWithPassword({ email, password: pass });
-    if (authErr) { err.textContent = '❌ ' + (authErr.message || 'Error al ingresar.'); return; }
-
-    err.textContent = '';
-    hideAuthUI();
-    document.getElementById('login').classList.add('hidden');
-    enterDash(user);
-  } catch(e) {
-    err.textContent = '❌ Error de conexión.';
-  }
+/* ── doLogin: stub — se sobreescribe al final del body, después de auth.js ── */
+function doLogin() {
+  const err = document.getElementById('login-err');
+  if (err) err.textContent = '⏳ Cargando...';
 }
 
 /* ── doReg con Supabase ── */
@@ -983,5 +953,70 @@ function showReg() { switchAuthTab('reg'); }
 <script src="js/pinguinos/naturaleza.js"></script>
 <script src="js/pinguinos/polar.js"></script>
 <script src="js/pinguinos/velocista.js"></script>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     OVERRIDE FINAL — doLogin con nuestros IDs de input (#lu / #lp)
+     Se define DESPUÉS de auth.js para pisar su versión.
+     auth.js usa IDs distintos y causa "Cannot read properties of null".
+     ═══════════════════════════════════════════════════════════════ -->
+<script>
+window.doLogin = async function doLogin() {
+  const user = (document.getElementById('lu')?.value || '').trim();
+  const pass = document.getElementById('lp')?.value || '';
+  const err  = document.getElementById('login-err');
+  if (!err) return;
+
+  if (!user || !pass) { err.textContent = 'Completa usuario y contraseña.'; return; }
+  err.textContent = '⏳ Ingresando...';
+
+  try {
+    const sb = window._sb;
+    if (!sb) { err.textContent = '❌ Error: cliente no inicializado.'; return; }
+
+    // Si es email login directo; si no, buscar el correo por username
+    let email = user;
+    if (!user.includes('@')) {
+      const { data, error: selErr } = await sb
+        .from('jugadores')
+        .select('correo, usuario')
+        .eq('usuario', user)
+        .maybeSingle();
+      if (selErr || !data) {
+        err.textContent = '❌ Usuario no encontrado.';
+        return;
+      }
+      email = data.correo;
+    }
+
+    const { data: signInData, error: authErr } = await sb.auth.signInWithPassword({ email, password: pass });
+    if (authErr) {
+      err.textContent = '❌ ' + (authErr.message || 'Contraseña incorrecta.');
+      return;
+    }
+
+    // Obtener username si se usó email para login
+    let displayName = user;
+    if (user.includes('@')) {
+      try {
+        const { data: jData } = await sb
+          .from('jugadores')
+          .select('usuario')
+          .eq('correo', email)
+          .maybeSingle();
+        if (jData?.usuario) displayName = jData.usuario;
+      } catch(_) {}
+    }
+
+    err.textContent = '';
+    window.currentUser = displayName;
+    hideAuthUI();
+    document.getElementById('login').classList.add('hidden');
+    if (typeof enterDash === 'function') enterDash(displayName);
+  } catch(e) {
+    err.textContent = '❌ Error de conexión.';
+    console.error('doLogin error:', e);
+  }
+};
+</script>
 </body>
 </html>
