@@ -70,7 +70,13 @@ async function onSignedIn(authUser) {
       || authUser.email?.split('@')[0]
       || 'Jugador';
 
-    window.currentUser = displayName;
+    window.currentUser     = displayName;
+    window.currentAuthUser = authUser;
+
+    // Poblar estado global PB (usado por monedero, perfil, etc.)
+    if (window.PB) {
+      window.PB.jugador = jugador || null;
+    }
 
     // Guardar para restauración rápida
     try { localStorage.setItem(PB_USER_KEY, displayName); } catch(_) {}

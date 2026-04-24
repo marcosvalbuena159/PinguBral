@@ -569,9 +569,8 @@ async function doReg() {
   }
 }
 
-/* ── OAuth placeholders ── */
-function doLoginGoogle()   { showToast('Google OAuth próximamente 🔧', '#7ab8ff'); }
-function doLoginFacebook() { showToast('Facebook OAuth próximamente 🔧', '#1877f2'); }
+/* ── OAuth: implementación real en auth.js ── */
+// doLoginGoogle() y doLoginFacebook() se definen en auth.js (cargado después)
 
 /* ── showReg (compatibilidad con código existente) ── */
 function showReg() { switchAuthTab('reg'); }
@@ -628,7 +627,7 @@ function showReg() { switchAuthTab('reg'); }
       <div style="margin-top:auto"></div>
       <div class="snav-sep"></div>
       <div class="snav" onclick="navTo('ajustes')" data-page="ajustes"><span class="ni">⚙️</span>Ajustes</div>
-      <div class="snav" style="color:rgba(255,100,100,.5)" onclick="showLogin()"><span class="ni">🚪</span>Cerrar Sesión</div>
+      <div class="snav" style="color:rgba(255,100,100,.5)" onclick="doLogout()"><span class="ni">🚪</span>Cerrar Sesión</div>
     </div>
 
     <!-- CONTENT -->
@@ -919,19 +918,8 @@ function showReg() { switchAuthTab('reg'); }
 -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="js/supabase-client.js"></script>
-<script>
-  // Alias: si supabase-client.js expone window.supabaseClient en vez de window._sb,
-  // lo normalizamos aquí para que doLogin/doReg funcionen.
-  if (!window._sb && window.supabaseClient) window._sb = window.supabaseClient;
-  // Si aún no existe (supabase-client.js usa otro nombre), creamos como fallback de último recurso.
-  if (!window._sb) {
-    window._sb = supabase.createClient(
-      'https://uqtoprfpfgxejdvsmlvo.supabase.co',
-      'sb_publishable_AyjHbCHVb0OSu5_6JSVIug_QB7P8QkH',
-      { auth: { storageKey: 'pb-auth' } } // storageKey único para evitar conflicto GoTrueClient
-    );
-  }
-</script>
+<!-- supabase-client.js ya expone window._sb con la clave correcta.
+     No se necesita fallback aquí. -->
 <script src="js/auth.js"></script>
 <script src="js/perfil_monedero.js"></script>
 <script src="js/ofline/pvsp.js"></script>
@@ -955,9 +943,9 @@ function showReg() { switchAuthTab('reg'); }
 <script src="js/pinguinos/velocista.js"></script>
 
 <!-- ═══════════════════════════════════════════════════════════════
-     OVERRIDE FINAL — doLogin con nuestros IDs de input (#lu / #lp)
-     Se define DESPUÉS de auth.js para pisar su versión.
-     auth.js usa IDs distintos y causa "Cannot read properties of null".
+     OVERRIDE FINAL — doLogin
+     Se define DESPUÉS de auth.js. Usa #lu / #lp (mismo que auth.js).
+     Además popula window.PB para que el resto de la app tenga datos.
      ═══════════════════════════════════════════════════════════════ -->
 <script>
 window.doLogin = async function doLogin() {
@@ -973,7 +961,7 @@ window.doLogin = async function doLogin() {
     const sb = window._sb;
     if (!sb) { err.textContent = '❌ Error: cliente no inicializado.'; return; }
 
-    // Si es email login directo; si no, buscar el correo por username
+    // Resolver email: login directo con correo o buscar por nombre de usuario
     let email = user;
     if (!user.includes('@')) {
       const { data, error: selErr } = await sb
@@ -981,37 +969,39 @@ window.doLogin = async function doLogin() {
         .select('correo, usuario')
         .eq('usuario', user)
         .maybeSingle();
-      if (selErr || !data) {
-        err.textContent = '❌ Usuario no encontrado.';
-        return;
-      }
+      if (selErr || !data) { err.textContent = '❌ Usuario no encontrado.'; return; }
       email = data.correo;
     }
 
+    // Autenticar en Supabase Auth
     const { data: signInData, error: authErr } = await sb.auth.signInWithPassword({ email, password: pass });
     if (authErr) {
       err.textContent = '❌ ' + (authErr.message || 'Contraseña incorrecta.');
       return;
     }
 
-    // Obtener username si se usó email para login
-    let displayName = user;
-    if (user.includes('@')) {
-      try {
-        const { data: jData } = await sb
-          .from('jugadores')
-          .select('usuario')
-          .eq('correo', email)
-          .maybeSingle();
-        if (jData?.usuario) displayName = jData.usuario;
-      } catch(_) {}
-    }
+    // Obtener fila completa del jugador y poblar window.PB
+    const { data: jugador } = await sb
+      .from('jugadores')
+      .select('usuario, nivel_jugador, icono_id, pinguino_fav1_id, pinguino_fav2_id, pinguino_fav3_id, correo')
+      .eq('auth_user_id', signInData.user.id)
+      .maybeSingle();
+
+    window.PB.session  = signInData.session;
+    window.PB.jugador  = jugador;
+
+    const displayName = jugador?.usuario
+      || signInData.user.user_metadata?.usuario
+      || email.split('@')[0];
 
     err.textContent = '';
-    window.currentUser = displayName;
+    window.currentUser     = displayName;
+    window.currentAuthUser = signInData.user;
+
     hideAuthUI();
     document.getElementById('login').classList.add('hidden');
-    if (typeof enterDash === 'function') enterDash(displayName);
+    if (typeof enterDash === 'function') enterDash(displayName, jugador);
+
   } catch(e) {
     err.textContent = '❌ Error de conexión.';
     console.error('doLogin error:', e);
