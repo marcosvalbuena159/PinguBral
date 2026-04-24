@@ -18,6 +18,15 @@ const RAR_COL   = { Común:'#9aa4af', Rara:'#4488ff', Épica:'#aa44ff', Legendar
 const RAR_CLASS = { Épica:'rar-epica', Legendaria:'rar-legendaria', Ultra:'rar-ultra' };
 const ROL_COL   = { Tanque:'#5ab0ff', Asesino:'#ff6b5a', Mago:'#c0aaff', Guerrero:'#e8a020', Soporte:'#66dd44' };
 const CICONS    = { peces:'🐟', krill:'🦐', piedras:'🪨', perlas:'🦪' };
+// ══ INIT — carga colección real desde Supabase ══════════════════
+// Se llama desde enterDash (main.js) después de initPerfilMonedero()
+async function initGuarida() {
+  // initPerfilMonedero ya cargó la colección en window.PB
+  // Solo actualizamos el contador de colección si la guarida está visible
+  if (typeof syncOwnedChars === 'function') syncOwnedChars();
+}
+
+
 
 // ══ PERSONAJES ══════════════════════════════════════════
 const CHARS_DEF = {
@@ -185,7 +194,9 @@ function renderCharGrid() {
       </div>
       <div class="g-card-foot">
         <div class="g-name" style="color:${isOwned?d.color:'rgba(118, 117, 117, 0.4)'}">${d.name}</div>
-        ${isOwned?`<div class="g-nivel">Nv. <span>${d.nivel||1}</span></div>`:''}
+        ${isOwned?`<div class="g-nivel">Nv. <span>${d.nivel||1}</span>
+          <span style="font-size:9px;color:rgba(255,255,255,.3);margin-left:4px">${(window.PB?._maestria?.[k]?.pts??0).toLocaleString('es')} pts</span>
+        </div>`:'<div class="g-cost" style="font-size:10px;color:rgba(255,255,255,.3)">🐟 5.000</div>'}
       </div>`;
     grid.appendChild(card);
   });
@@ -435,13 +446,16 @@ function mkOv() {
 function showOv(ov) { document.body.appendChild(ov); requestAnimationFrame(()=>ov.classList.add('visible')); }
 
 // ══ openEgg — llamado desde Tienda ══════════════════════
-function openEgg(id) {
+async function openEgg(id) {
   const egg = (window._EGGS||[]).find(e=>e.id===id);
   if (!egg||egg.locked) return;
-  const u = getCurrUser(); if(!u){showToast('⚠️ Inicia sesión','#ff8844');return;}
+  if(!window.PB?.jugador){showToast('⚠️ Inicia sesión','#ff8844');return;}
   const curKey = egg.costIcon==='🐟'?'peces':egg.costIcon==='🦐'?'krill':egg.costIcon==='🪨'?'piedras':'perlas';
-  if(u[curKey]<egg.cost){showToast('❌ No tienes suficiente '+egg.costIcon,'#ff4444');return;}
-  u[curKey]-=egg.cost; saveCurrUser(u); updateTopbarCurrencies();
+  const saldo = window.PB?.monedero?.[curKey]??0;
+  if(saldo<egg.cost){showToast('❌ No tienes suficiente '+egg.costIcon,'#ff4444');return;}
+  // Gastar moneda en Supabase
+  const ok = await gastarMoneda(curKey, egg.cost, 'apertura_huevo_'+id);
+  if(!ok){showToast('❌ Error al abrir huevo','#ff4444');return;}
   const item = egg.pool[Math.floor(Math.random()*egg.pool.length)];
   document.getElementById('egg-reveal-icon').textContent = item.icon;
   document.getElementById('egg-reveal-name').textContent = item.name;

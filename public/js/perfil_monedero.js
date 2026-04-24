@@ -1,289 +1,236 @@
-// ============================================================
-//  perfil-monedero.js  —  Puente entre Supabase (window.PB)
-//  y las funciones que main.js, tienda.js, etc. usan
-//
-//  Carga DESPUÉS de auth.js y ANTES de main.js
-// ============================================================
+// ================================================================
+//  PENGUBRAWL — perfil_monedero.js  v3.0
+//  Puente central entre el juego y Supabase.
+// ================================================================
 
-// ── Íconos de moneda (usados en main.js) ───────────────────
-const CICONS = { peces: '🐟', krill: '🦐', piedras: '🪨', perlas: '🦪' };
-const CURRENCY_LABELS = {
-  peces: '🐟 Peces', krill: '🦐 Krill',
-  piedras: '🪨 Piedras', perlas: '🦪 Perlas',
-};
+window.CICONS = { peces:'🐟', krill:'🦐', piedras:'🪨', perlas:'🦪' };
+window.CURRENCY_LABELS = { peces:'Peces', krill:'Krill', piedras:'Piedras', perlas:'Perlas' };
 
-// ── Definición de personajes (desbloqueables) ──────────────
-// Complementa a CHARS (definido en main.js).
-// owned se actualiza dinámicamente según el inventario del jugador.
-const CHARS_DEF = {
-  polar:     { price: 5000, currency: 'peces', owned: true  },
-  chili:     { price: 5000, currency: 'peces', owned: true  },
-  cuchillas: { price: 5000, currency: 'peces', owned: false },
-  electrico: { price: 5000, currency: 'peces', owned: false },
-  elemental: { price: 5000, currency: 'peces', owned: false },
-  fortachon: { price: 5000, currency: 'peces', owned: false },
-  velocista: { price: 5000, currency: 'peces', owned: false },
-  guerrero:  { price: 5000, currency: 'peces', owned: false },
-  naturaleza:{ price: 5000, currency: 'peces', owned: false },
-  campos:    { price: 5000, currency: 'peces', owned: false },
-};
+const _TIPO_MAP = { char:'pinguino', skin:'skin', icon:'icono', bg:'fondo', emote:'reaccion' };
+let _coleccionCache = null;
 
-// ── currentUser (alias de texto para compatibilidad) ───────
-// main.js lee `currentUser` directamente como string.
-// Lo mantenemos sincronizado con window.PB.jugador.
-Object.defineProperty(window, 'currentUser', {
-  get() { return window.PB?.jugador?.usuario ?? null; },
-  set() {}, // ignorado — la fuente de verdad es window.PB
-  configurable: true,
-});
+// ── MONEDERO ────────────────────────────────────────────────────
 
-// ── getCurrUser ─────────────────────────────────────────────
-// Devuelve un objeto con la forma que main.js espera:
-// { peces, krill, piedras, perlas, ownedChars, wins, losses, ... }
-function getCurrUser() {
-  const j = window.PB?.jugador;
-  const m = window.PB?.monedero;
-  if (!j) return null;
-
-  return {
-    // Identidad
-    usuario:       j.usuario,
-    nivel_jugador: j.nivel_jugador ?? 1,
-    experiencia:   j.experiencia   ?? 0,
-    // Monedas (de monedero_jugador)
-    peces:   m?.peces   ?? 0,
-    krill:   m?.krill   ?? 0,
-    piedras: m?.piedras ?? 0,
-    perlas:  m?.perlas  ?? 0,
-    // Inventario (arrays de keys de personaje)
-    ownedChars: window.PB._ownedChars ?? ['polar', 'chili'],
-    ownedSkins: window.PB._ownedSkins ?? [],
-    ownedIcons: window.PB._ownedIcons ?? [],
-    ownedBgs:   window.PB._ownedBgs   ?? [],
-    // Stats de partidas (en memoria por sesión; se guardan al finalizar)
-    wins:       window.PB._stats?.wins      ?? 0,
-    losses:     window.PB._stats?.losses    ?? 0,
-    totalDmg:   window.PB._stats?.totalDmg  ?? 0,
-    totalKills: window.PB._stats?.totalKills ?? 0,
-    rankPts:    window.PB._rankPts           ?? 0,
-  };
-}
-
-// ── saveCurrUser ────────────────────────────────────────────
-// main.js llama a esto después de modificar el objeto de usuario.
-// Aquí sincronizamos los cambios relevantes a Supabase.
-function saveCurrUser(data) {
-  if (!window.PB?.jugador) return;
-
-  // Actualizar monedero en memoria
-  const m = window.PB.monedero;
-  if (m) {
-    if (data.peces   !== undefined) m.peces   = data.peces;
-    if (data.krill   !== undefined) m.krill   = data.krill;
-    if (data.piedras !== undefined) m.piedras = data.piedras;
-    if (data.perlas  !== undefined) m.perlas  = data.perlas;
-  }
-
-  // Inventarios en memoria
-  if (data.ownedChars) window.PB._ownedChars = data.ownedChars;
-  if (data.ownedSkins) window.PB._ownedSkins = data.ownedSkins;
-  if (data.ownedIcons) window.PB._ownedIcons = data.ownedIcons;
-  if (data.ownedBgs)   window.PB._ownedBgs   = data.ownedBgs;
-
-  // Stats
-  if (!window.PB._stats) window.PB._stats = {};
-  ['wins','losses','totalDmg','totalKills'].forEach(k => {
-    if (data[k] !== undefined) window.PB._stats[k] = data[k];
-  });
-
-  // Flush a Supabase con debounce (800 ms)
-  clearTimeout(window.PB._saveTimer);
-  window.PB._saveTimer = setTimeout(_flushMonedero, 800);
-}
-
-async function _flushMonedero() {
-  const jugadorId = window.PB?.jugador?.id;
-  const m = window.PB?.monedero;
-  if (!jugadorId || !m) return;
-
+async function loadMonedero() {
+  const sb = window._sb, jug = window.PB?.jugador;
+  if (!sb || !jug?.id) return;
   try {
-    await window.sb.from('monedero_jugador').upsert({
-      jugador_id:    jugadorId,
-      peces:         m.peces   ?? 0,
-      krill:         m.krill   ?? 0,
-      piedras:       m.piedras ?? 0,
-      perlas:        m.perlas  ?? 0,
-      actualizado_en: new Date().toISOString(),
-    }, { onConflict: 'jugador_id' });
-  } catch (e) {
-    console.warn('[PB] Error guardando monedero:', e);
-  }
+    const { data, error } = await sb
+      .from('monedero_jugador')
+      .select('peces,krill,piedras,perlas')
+      .eq('jugador_id', jug.id)
+      .single();
+    if (error) { console.warn('[monedero]', error.message); return; }
+    window.PB.monedero = data;
+    updateTopbarCurrencies();
+    return data;
+  } catch(e) { console.error('[monedero]', e); }
 }
 
-// ── getUserCurr ─────────────────────────────────────────────
-function getUserCurr() {
-  const m = window.PB?.monedero;
-  return {
-    peces:   m?.peces   ?? 0,
-    krill:   m?.krill   ?? 0,
-    piedras: m?.piedras ?? 0,
-    perlas:  m?.perlas  ?? 0,
-  };
-}
-
-// ── updateTopbarCurrencies ──────────────────────────────────
 function updateTopbarCurrencies() {
-  const c = getUserCurr();
-  const fmt = n => n >= 1000 ? (n / 1000).toFixed(1).replace('.0', '') + 'K' : n;
-  const el = id => document.getElementById(id);
-  if (el('c-peces'))   el('c-peces').textContent   = fmt(c.peces);
-  if (el('c-krill'))   el('c-krill').textContent   = fmt(c.krill);
-  if (el('c-piedras')) el('c-piedras').textContent = fmt(c.piedras);
-  if (el('c-perlas'))  el('c-perlas').textContent  = fmt(c.perlas);
+  const m = window.PB?.monedero ?? {};
+  const fmt = n => Number(n ?? 0).toLocaleString('es');
+  const el  = id => document.getElementById(id);
+  if (el('c-peces'))   el('c-peces').textContent   = fmt(m.peces);
+  if (el('c-krill'))   el('c-krill').textContent   = fmt(m.krill);
+  if (el('c-piedras')) el('c-piedras').textContent = fmt(m.piedras);
+  if (el('c-perlas'))  el('c-perlas').textContent  = fmt(m.perlas);
 }
 
-// ── addCurrency ─────────────────────────────────────────────
-function addCurrency(currency, amount) {
-  const m = window.PB?.monedero;
-  if (!m) return;
-  m[currency] = (m[currency] ?? 0) + amount;
-  updateTopbarCurrencies();
-  clearTimeout(window.PB._saveTimer);
-  window.PB._saveTimer = setTimeout(_flushMonedero, 800);
-}
+// ── COLECCIÓN ───────────────────────────────────────────────────
 
-// ── hasItem ─────────────────────────────────────────────────
-function hasItem(type, key) {
-  const arrKey = '_owned' + type.charAt(0).toUpperCase() + type.slice(1) + 's';
-  const arr = window.PB?.[arrKey] ?? [];
-  return arr.includes(key);
-}
-
-// ── buyItem ─────────────────────────────────────────────────
-function buyItem(type, key, price, currency) {
-  const u = getCurrUser();
-  if (!u)              { showToast('⚠️ Debes iniciar sesión', '#ff8844'); return false; }
-
-  if (hasItem(type, key)) { showToast('✅ ¡Ya tienes este ítem!', '#44ff88'); return false; }
-  if (u[currency] < price) {
-    showToast('❌ No tienes suficiente ' + CURRENCY_LABELS[currency], '#ff4444');
-    return false;
-  }
-
-  // Descontar moneda
-  const m = window.PB.monedero;
-  m[currency] -= price;
-  updateTopbarCurrencies();
-
-  // Añadir al inventario en memoria
-  const arrKey = '_owned' + type.charAt(0).toUpperCase() + type.slice(1) + 's';
-  window.PB[arrKey] = [...(window.PB[arrKey] ?? []), key];
-
-  // Reflejar en CHARS_DEF si es personaje
-  if (type === 'char' && CHARS_DEF[key]) CHARS_DEF[key].owned = true;
-
-  showToast('🎉 ¡Comprado! -' + price + ' ' + CICONS[currency], '#a078ff');
-
-  // Persistir en Supabase
-  _persistCompra(type, key, price, currency);
-  return true;
-}
-
-async function _persistCompra(type, key, price, currency) {
-  const jugadorId = window.PB?.jugador?.id;
-  if (!jugadorId) return;
+async function _cargarColeccion() {
+  if (_coleccionCache) return _coleccionCache;
+  const sb = window._sb, jug = window.PB?.jugador;
+  if (!sb || !jug?.id) return [];
   try {
-    await window.sb.rpc('gastar_monedas', {
-      p_jugador_id: jugadorId,
-      p_moneda:     currency,
-      p_cantidad:   price,
-      p_motivo:     'Compra tienda: ' + type + ' / ' + key,
-    });
-  } catch (e) {
-    console.warn('[PB] Error RPC gastar_monedas:', e);
+    const { data } = await sb
+      .from('coleccion_jugador')
+      .select('item_tipo,pinguino_id,skin_id,icono_id,fondo_id,reaccion_id')
+      .eq('jugador_id', jug.id);
+    _coleccionCache = data ?? [];
+    return _coleccionCache;
+  } catch(e) { return []; }
+}
+
+function hasItem(tipo, key) {
+  if (tipo === 'char' && (key === 'polar' || key === 'chili')) return true;
+  if (tipo === 'char') return (window.PB?._ownedChars ?? []).includes(key);
+  if (tipo === 'skin') return (window.PB?._ownedSkins ?? []).includes(key);
+  if (tipo === 'icon') return (window.PB?._ownedIcons ?? []).includes(key);
+  if (tipo === 'bg')   return (window.PB?._ownedFondos ?? []).includes(key);
+  if (tipo === 'emote')return (window.PB?._ownedReacciones ?? []).includes(key);
+  return false;
+}
+
+async function initPerfilMonedero() {
+  await Promise.all([loadMonedero(), _initColeccion()]);
+}
+
+async function _initColeccion() {
+  const col = await _cargarColeccion();
+  const pingIds = col.filter(c => c.item_tipo === 'pinguino' && c.pinguino_id).map(c => c.pinguino_id);
+
+  if (pingIds.length > 0) {
+    try {
+      const { data: pings } = await window._sb.from('pinguinos').select('id,nombre').in('id', pingIds);
+      const keys = (pings ?? []).map(p => _nombreToKey(p.nombre)).filter(Boolean);
+      window.PB._ownedChars = ['polar','chili',...keys];
+    } catch(e) { window.PB._ownedChars = ['polar','chili']; }
+  } else {
+    window.PB._ownedChars = ['polar','chili'];
   }
-}
 
-// ── buyChar (alias usado en tienda.js) ─────────────────────
-function buyChar(key, price, currency) {
-  return buyItem('char', key, price, currency);
-}
-
-// ── syncOwnedChars ──────────────────────────────────────────
-// Actualiza CHARS_DEF.owned según el inventario actual
-function syncOwnedChars() {
-  const owned = window.PB?._ownedChars ?? ['polar', 'chili'];
-  Object.keys(CHARS_DEF).forEach(k => {
-    CHARS_DEF[k].owned = owned.includes(k);
-  });
-}
-
-// ── enterDash ───────────────────────────────────────────────
-// auth.js llama a enterDash(nombre) tras login exitoso.
-// Aquí inicializamos PB._owned* y actualizamos la UI.
-function initPerfilMonedero() {
-  // Cargar inventario de coleccion_jugador (ya estará en window.PB._coleccion
-  // si auth.js lo populate; si no, usamos defaults)
-  const col = window.PB?._coleccion ?? [];
-
-  // Mapear IDs de pingüinos a las keys de CHARS usando el nombre
-  // (la tabla pinguinos usa nombre: 'Polar','Chili',etc.)
-  const charNameToKey = {
-    'polar': 'polar', 'chili': 'chili', 'cuchillas': 'cuchillas',
-    'electro': 'electrico', 'elemental': 'elemental', 'fortachón': 'fortachon',
-    'velocista': 'velocista', 'guerrero': 'guerrero',
-    'naturaleza': 'naturaleza', 'campos': 'campos',
-  };
-
-  // Por ahora asignamos defaults seguros
-  // (en una implementación completa se resolvería pinguino_id → nombre via JOIN)
-  if (!window.PB._ownedChars) window.PB._ownedChars = ['polar', 'chili'];
-  if (!window.PB._ownedSkins) window.PB._ownedSkins = [];
-  if (!window.PB._ownedIcons) window.PB._ownedIcons = [];
-  if (!window.PB._ownedBgs)   window.PB._ownedBgs   = [];
-  if (!window.PB._stats)      window.PB._stats = { wins: 0, losses: 0, totalDmg: 0, totalKills: 0 };
-  if (!window.PB._rankPts)    window.PB._rankPts = 0;
-
+  window.PB._ownedSkins     = col.filter(c=>c.item_tipo==='skin').map(c=>c.skin_id);
+  window.PB._ownedIcons     = col.filter(c=>c.item_tipo==='icono').map(c=>c.icono_id);
+  window.PB._ownedFondos    = col.filter(c=>c.item_tipo==='fondo').map(c=>c.fondo_id);
+  window.PB._ownedReacciones= col.filter(c=>c.item_tipo==='reaccion').map(c=>c.reaccion_id);
   syncOwnedChars();
-  updateTopbarCurrencies();
 }
 
-// ── Guardar resultado de partida a Supabase ─────────────────
-async function saveMatchResult({ winner, p1Stats, p2Stats, modeName }) {
-  const jugadorId = window.PB?.jugador?.id;
-  if (!jugadorId) return;
+function syncOwnedChars() {
+  if (typeof CHARS_DEF === 'undefined') return;
+  const owned = window.PB?._ownedChars ?? ['polar','chili'];
+  Object.keys(CHARS_DEF).forEach(k => { CHARS_DEF[k].owned = owned.includes(k); });
+}
 
-  // Actualizar stats en memoria
-  if (!window.PB._stats) window.PB._stats = {};
-  const isWin = winner === 'p1';
-  window.PB._stats.wins       = (window.PB._stats.wins       ?? 0) + (isWin ? 1 : 0);
-  window.PB._stats.losses     = (window.PB._stats.losses     ?? 0) + (isWin ? 0 : 1);
-  window.PB._stats.totalDmg   = (window.PB._stats.totalDmg   ?? 0) + p1Stats.dmg;
-  window.PB._stats.totalKills = (window.PB._stats.totalKills ?? 0) + p1Stats.kills;
+function _nombreToKey(n) {
+  const m = {
+    'polar':'polar','chili':'chili','cuchillas':'cuchillas',
+    'electro':'electrico','eléctrico':'electrico','elemental':'elemental',
+    'fortachón':'fortachon','fortachon':'fortachon','velocista':'velocista',
+    'guerrero':'guerrero','naturaleza':'naturaleza',
+    'campos':'campos','campos de fuerza':'campos',
+  };
+  return m[(n??'').toLowerCase()] ?? null;
+}
 
-  // Recompensas
-  const pecesGan = isWin ? 120 : 60;
-  const krillGan = isWin ? 30  : 15;
-  addCurrency('peces', pecesGan);
-  addCurrency('krill', krillGan);
+function _keyToNombre(k) {
+  const m = {
+    polar:'Polar',chili:'Chili',cuchillas:'Cuchillas',
+    electrico:'Electro',elemental:'Elemental',fortachon:'Fortachón',
+    velocista:'Velocista',guerrero:'Guerrero',naturaleza:'Naturaleza',campos:'Campos',
+  };
+  return m[k] ?? k;
+}
+
+// ── COMPATIBILIDAD LEGADO ───────────────────────────────────────
+
+function getCurrUser() {
+  const m = window.PB?.monedero ?? {};
+  return {
+    peces: m.peces??0, krill: m.krill??0, piedras: m.piedras??0, perlas: m.perlas??0,
+    ownedChars:  window.PB?._ownedChars??['polar','chili'],
+    ownedSkins:  window.PB?._ownedSkins??[],
+    ownedIcons:  window.PB?._ownedIcons??[],
+    ownedFondos: window.PB?._ownedFondos??[],
+    wins:      window.PB?._stats?.wins??0,
+    losses:    window.PB?._stats?.losses??0,
+    totalKills:window.PB?._stats?.totalKills??0,
+    totalDmg:  window.PB?._stats?.totalDmg??0,
+  };
+}
+function saveCurrUser() { /* deprecated — datos van a Supabase */ }
+
+// ── TRANSACCIONES ───────────────────────────────────────────────
+
+async function addCurrency(moneda, cantidad, motivo) {
+  const sb = window._sb, jug = window.PB?.jugador;
+  if (!sb || !jug?.id || !cantidad) return false;
+  try {
+    const { error } = await sb.rpc('dar_monedas', {
+      p_jugador_id: jug.id, p_moneda: moneda,
+      p_cantidad: cantidad, p_motivo: motivo ?? 'sistema',
+    });
+    if (error) { console.warn('[addCurrency]', error.message); return false; }
+    if (window.PB.monedero) window.PB.monedero[moneda] = (window.PB.monedero[moneda]??0) + cantidad;
+    updateTopbarCurrencies();
+    return true;
+  } catch(e) { return false; }
+}
+
+async function gastarMoneda(moneda, cantidad, motivo) {
+  const sb = window._sb, jug = window.PB?.jugador;
+  if (!sb || !jug?.id) return false;
+  const saldo = window.PB?.monedero?.[moneda] ?? 0;
+  if (saldo < cantidad) return false;
+  try {
+    const { data, error } = await sb.rpc('gastar_monedas', {
+      p_jugador_id: jug.id, p_moneda: moneda,
+      p_cantidad: cantidad, p_motivo: motivo ?? 'compra',
+    });
+    if (error || data === false) return false;
+    if (window.PB.monedero) window.PB.monedero[moneda] = Math.max(0, saldo - cantidad);
+    updateTopbarCurrencies();
+    return true;
+  } catch(e) { return false; }
+}
+
+// ── COMPRAS ─────────────────────────────────────────────────────
+
+async function buyChar(charKey, price, currency) {
+  if (hasItem('char', charKey)) { showToast('Ya tienes este pingüino 🐧','#44ff88'); return; }
+  const cur = currency ?? 'peces';
+  const ok  = await gastarMoneda(cur, price, `compra_pinguino_${charKey}`);
+  if (!ok) { showToast(`❌ No tienes suficientes ${window.CICONS[cur]}`, '#ff4444'); return; }
 
   try {
-    // Llamar a dar_monedas en Supabase para registrar transacción
-    await window.sb.rpc('dar_monedas', {
-      p_jugador_id: jugadorId,
-      p_moneda:     'peces',
-      p_cantidad:   pecesGan,
-      p_motivo:     'Recompensa partida (' + (isWin ? 'victoria' : 'derrota') + ')',
-    });
-    await window.sb.rpc('dar_monedas', {
-      p_jugador_id: jugadorId,
-      p_moneda:     'krill',
-      p_cantidad:   krillGan,
-      p_motivo:     'Recompensa partida krill',
-    });
-  } catch (e) {
-    console.warn('[PB] Error guardando recompensas:', e);
-  }
+    const { data: pingRow } = await window._sb
+      .from('pinguinos').select('id').ilike('nombre', _keyToNombre(charKey)).maybeSingle();
+    if (pingRow?.id) {
+      await window._sb.rpc('agregar_a_coleccion', {
+        p_jugador_id: window.PB.jugador.id, p_item_tipo:'pinguino', p_item_id: pingRow.id,
+      });
+    }
+  } catch(e) { console.warn('[buyChar] colección:', e); }
 
-  return { pecesGan, krillGan };
+  if (!window.PB._ownedChars) window.PB._ownedChars = ['polar','chili'];
+  if (!window.PB._ownedChars.includes(charKey)) window.PB._ownedChars.push(charKey);
+  if (typeof CHARS_DEF !== 'undefined' && CHARS_DEF[charKey]) CHARS_DEF[charKey].owned = true;
+  _coleccionCache = null;
+  showToast(`✅ ¡${CHARS_DEF?.[charKey]?.name ?? charKey} desbloqueado! 🐧`, '#44ff88');
+  if (typeof buildGuarida === 'function') buildGuarida('chars');
+}
+
+async function buyItem(tipo, key, price, currency) {
+  if (hasItem(tipo, key)) { showToast('Ya tienes este ítem ✅','#44ff88'); return; }
+  const cur = currency ?? 'peces';
+  const ok  = await gastarMoneda(cur, price, `compra_${tipo}_${key}`);
+  if (!ok) { showToast(`❌ No tienes suficientes ${window.CICONS[cur]}`, '#ff4444'); return; }
+  showToast('✅ ¡Compra exitosa!','#44ff88');
+  _coleccionCache = null;
+}
+
+// ── GUARDAR PARTIDA ─────────────────────────────────────────────
+
+async function saveMatchResult({ winner, p1Stats, p2Stats, modeName }) {
+  const sb = window._sb, jug = window.PB?.jugador;
+  if (!sb || !jug?.id) return null;
+
+  const esGanador = winner === 'p1';
+  const misStats  = p1Stats ?? {};
+  const pecesGan  = (esGanador ? 120 : 40) + (misStats.kills ?? 0) * 15;
+  const krillGan  = esGanador ? 20 : 5;
+
+  try {
+    await sb.from('historial_partidas').insert({
+      jugador_id:  jug.id,
+      resultado:   esGanador ? 'victoria' : 'derrota',
+      asesinatos:  misStats.kills  ?? 0,
+      muertes:     misStats.deaths ?? 0,
+      asistencias: 0,
+      dano_total:  misStats.dmg   ?? 0,
+      modo:        modeName ?? '1v1_offline',
+      jugada_en:   new Date().toISOString(),
+    });
+    await addCurrency('peces', pecesGan,  `partida_${modeName}`);
+    await addCurrency('krill', krillGan,  `partida_krill`);
+
+    if (!window.PB._stats) window.PB._stats = {wins:0,losses:0,totalKills:0,totalDmg:0};
+    if (esGanador) window.PB._stats.wins++; else window.PB._stats.losses++;
+    window.PB._stats.totalKills += misStats.kills ?? 0;
+    window.PB._stats.totalDmg   += misStats.dmg   ?? 0;
+
+    return { pecesGan, krillGan };
+  } catch(e) { console.error('[saveMatch]', e); return null; }
 }

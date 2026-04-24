@@ -84,6 +84,11 @@ async function onSignedIn(authUser) {
     hideAuthUI();
     document.getElementById('login')?.classList.add('hidden');
 
+    // Cargar monedero y colección desde Supabase antes de mostrar dashboard
+    if (typeof initPerfilMonedero === 'function') {
+      await initPerfilMonedero().catch(e => console.warn('[auth] initPerfilMonedero:', e));
+    }
+
     if (typeof enterDash === 'function') {
       enterDash(displayName, jugador);
     }
@@ -104,6 +109,10 @@ async function onSignedIn(authUser) {
 function onSignedOut() {
   window.currentAuthUser = null;
   window.currentUser     = null;
+  // Limpiar estado global del juego
+  if (window.PB) { window.PB.session = null; window.PB.jugador = null; window.PB.monedero = null; window.PB._ownedChars = null; }
+  // Limpiar cache de módulos
+  window.dispatchEvent(new Event('pb:signout'));
   try { localStorage.removeItem(PB_USER_KEY); } catch(_) {}
   showLogin();
 }

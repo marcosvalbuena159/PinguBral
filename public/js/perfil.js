@@ -24,7 +24,11 @@ async function buildProfile(tab) {
   area.innerHTML = '<div style="color:rgba(255,255,255,.3);font-size:13px;padding:24px 0">Cargando...</div>';
 
   // Cargar datos de Supabase solo la primera vez por sesión
-  if (!_perfilCargado && window.PB?.jugador?.id) {
+  if (!window.PB?.jugador?.id) {
+    area.innerHTML = '<div style="color:rgba(255,100,100,.4);font-size:13px;padding:24px 0">Inicia sesión para ver tu perfil.</div>';
+    return;
+  }
+  if (!_perfilCargado) {
     await _cargarDatosPerfil();
     _perfilCargado = true;
   }
@@ -310,3 +314,7 @@ function _tiempoRelativo(iso) {
 function _esc(str) {
   return String(str).replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
+
+// ── Llamar al cerrar sesión para limpiar cache ──────────────────
+// (doLogout en auth.js debería llamar a esto)
+window.addEventListener('pb:signout', resetPerfilCache);
