@@ -18,20 +18,42 @@ function showToast(msg,col){
 //    definidas en auth.js — no se redefinen aquí.
 
 function showLogin(){
-  document.getElementById('login').classList.remove('hidden');document.getElementById('register').classList.add('hidden');
-  document.getElementById('dashboard').classList.add('hidden');document.getElementById('game-wrap').classList.add('hidden');
+  // Mostrar pantalla auth y ocultar dashboard/juego
+  const login = document.getElementById('login'); if(login) login.classList.remove('hidden');
+  const reg   = document.getElementById('register'); if(reg) reg.classList.add('hidden');
+  const dash  = document.getElementById('dashboard'); if(dash) dash.classList.add('hidden');
+  const game  = document.getElementById('game-wrap'); if(game) game.classList.add('hidden');
+  // Restaurar fondo y elementos auth
+  const bg   = document.getElementById('auth-bg-layer'); if(bg)   bg.style.display   = '';
+  const chbg = document.getElementById('auth-change-bg'); if(chbg) chbg.style.display = '';
+  const ver  = document.querySelector('.auth-ver'); if(ver)  ver.style.display  = '';
+  const bar  = document.getElementById('auth-bar'); if(bar)  bar.style.display  = '';
 }
 function syncOwnedChars(){
   const owned=window.PB?._ownedChars??['polar','chili'];
   Object.keys(CHARS_DEF).forEach(k=>{CHARS_DEF[k].owned=owned.includes(k);});
 }
-function enterDash(name){
-  if(typeof initPerfilMonedero === 'function') initPerfilMonedero();
-  document.getElementById('login').classList.add('hidden');document.getElementById('register').classList.add('hidden');
+function enterDash(name, jugadorData){
+  // Guardar datos del jugador globalmente
+  if(jugadorData && window.PB) window.PB.jugador = jugadorData;
+
+  document.getElementById('login').classList.add('hidden');
+  const reg = document.getElementById('register'); if(reg) reg.classList.add('hidden');
   document.getElementById('dashboard').classList.remove('hidden');
-  document.getElementById('tb-pname').textContent=name;
-  const profUname=document.getElementById('prof-uname');if(profUname)profUname.textContent=name;
-  updateTopbarCurrencies();
+  document.getElementById('tb-pname').textContent = name;
+  const profUname = document.getElementById('prof-uname');
+  if(profUname) profUname.textContent = name;
+
+  // Cargar monedero desde Supabase si está disponible
+  if(typeof loadMonedero === 'function'){
+    loadMonedero().catch(e => console.warn('[enterDash] loadMonedero:', e));
+  } else if(typeof initPerfilMonedero === 'function'){
+    initPerfilMonedero();
+  } else {
+    updateTopbarCurrencies();
+  }
+
+  syncOwnedChars();
   navTo('home');
 }
 
@@ -639,8 +661,7 @@ document.addEventListener('keydown',e=>{
 document.addEventListener('keyup',e=>{keys[e.key.toLowerCase()]=false;});
 document.addEventListener('contextmenu',e=>e.preventDefault());
 window.addEventListener('load',()=>{
-  // initAuth() es llamado por auth.js vía DOMContentLoaded.
-  // Si por alguna razón auth.js no cargó, mostramos el login directamente.
-  if(typeof initAuth === 'function') initAuth();
-  else showLogin();
+  // auth.js maneja initAuth() via DOMContentLoaded — no llamar de nuevo aquí.
+  // Solo mostrar login si auth.js no cargó en absoluto.
+  if(typeof initAuth !== 'function') showLogin();
 });
