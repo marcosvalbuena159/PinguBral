@@ -60,8 +60,9 @@ function enterDash(name, jugadorData){
 // ═══════════════════════════════════════════════════════
 //  NAVIGATION — dashboard pages
 // ═══════════════════════════════════════════════════════
-const PAGES=['home','modesel','guarida','dominio','profile','charsel','misiones','tienda','colonia','ajustes'];
-function navTo(page){
+window.PAGES=['home','modesel','guarida','dominio','profile','charsel','misiones','tienda','colonia','ajustes'];
+const PAGES=window.PAGES;
+window.navTo=function navTo(page){
   PAGES.forEach(p=>{
     const el=document.getElementById('page-'+p);if(el){if(p===page)el.classList.remove('hidden');else el.classList.add('hidden');}
   });
@@ -78,7 +79,7 @@ function navTo(page){
   else if(page==='colonia')buildColonia();
   else if(page==='ajustes')buildAjustes();
   if(page==='home')loadHomeBg();
-}
+};
 function exitGame(){document.getElementById('game-wrap').classList.add('hidden');navTo('home');}
 function goCharSel(){document.getElementById('game-wrap').classList.add('hidden');navTo('charsel');}
 
@@ -207,7 +208,8 @@ function buildHexModes(tab){
 
 
 
-const CW=860,CH=520,CS=34;
+window.CW=window.CW||860; window.CH=window.CH||520; window.CS=window.CS||34;
+var CW=window.CW,CH=window.CH,CS=window.CS;
 let canvas,ctx,running=false,animId=null;
 let keys={},p1,p2;
 let particles=[],projs=[],effects=[],floats=[],blades=[];
@@ -664,4 +666,10 @@ window.addEventListener('load',()=>{
   // auth.js maneja initAuth() via DOMContentLoaded — no llamar de nuevo aquí.
   // Solo mostrar login si auth.js no cargó en absoluto.
   if(typeof initAuth !== 'function') showLogin();
+
+  // Reemplazar stub navTo con la versión real y ejecutar cualquier nav pendiente
+  window.navTo = navTo;
+  if(document._pendingNav && window.PAGES.includes(document._pendingNav)){
+    const p = document._pendingNav; document._pendingNav = null; navTo(p);
+  }
 });

@@ -415,6 +415,12 @@ select.aml-input option { background: #0c1130; color: #fff; }
      JS AUTH — tabs + fondo + Supabase
      ═══════════════════════════════════════ -->
 <script>
+
+/* ── navTo stub — disponible inmediatamente antes de que main.js cargue ── */
+window.navTo = window.navTo || function(page) {
+  // Stub: encola la navegación hasta que main.js esté listo
+  document._pendingNav = page;
+};
 /* ── Tabs Login / Registro ── */
 function switchAuthTab(tab) {
   const isLogin = (tab === 'login');
