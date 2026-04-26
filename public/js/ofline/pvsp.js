@@ -7,19 +7,22 @@
 // ═══════════════════════════════════════════════════════
 
 // ── Constantes del juego ─────────────────────────────
-const CW=860,CH=520,CS=34;
-const BHP=1400,BW=52,BH=64,RESP=300;
-const TILE=20;
-const MAXBL=10;
+var CW=typeof CW!=="undefined"?CW:860,CH=typeof CH!=="undefined"?CH:520,CS=typeof CS!=="undefined"?CS:34;
+var BHP=typeof BHP!=="undefined"?BHP:1400,BW=typeof BW!=="undefined"?BW:52,BH=typeof BH!=="undefined"?BH:64,RESP=typeof RESP!=="undefined"?RESP:300;
+var TILE=typeof TILE!=="undefined"?TILE:20;
+var MAXBL=typeof MAXBL!=="undefined"?MAXBL:10;
 
 // ── Estado global del juego ──────────────────────────
-let canvas,ctx,running=false,animId=null;
-let keys={},p1,p2;
-let particles=[],projs=[],effects=[],floats=[],blades=[];
-let shake={x:0,y:0,d:0},bgT=[];
-let p1k=null,p2k=null;
-let base1,base2;
-let stats={p1:{dmg:0,kills:0,deaths:0},p2:{dmg:0,kills:0,deaths:0}};
+if(typeof canvas==="undefined"){var canvas=null;} if(typeof ctx==="undefined"){var ctx=null;}
+if(typeof running==="undefined"){var running=false;} if(typeof animId==="undefined"){var animId=null;}
+if(typeof keys==="undefined"){var keys={};} if(typeof p1==="undefined"){var p1=null;} if(typeof p2==="undefined"){var p2=null;}
+if(typeof particles==="undefined"){var particles=[];} if(typeof projs==="undefined"){var projs=[];}
+if(typeof effects==="undefined"){var effects=[];} if(typeof floats==="undefined"){var floats=[];}
+if(typeof blades==="undefined"){var blades=[];}
+if(typeof shake==="undefined"){var shake={x:0,y:0,d:0};} if(typeof bgT==="undefined"){var bgT=[];}
+if(typeof p1k==="undefined"){var p1k=null;} if(typeof p2k==="undefined"){var p2k=null;}
+if(typeof base1==="undefined"){var base1=null;} if(typeof base2==="undefined"){var base2=null;}
+if(typeof stats==="undefined"){var stats={p1:{dmg:0,kills:0,deaths:0},p2:{dmg:0,kills:0,deaths:0}};}
 
 // ── Mapa: paredes y arbustos ─────────────────────────
 const WALLS=[
@@ -58,7 +61,7 @@ function updStats(){
 }
 
 // ── Audio ────────────────────────────────────────────
-let _ac=null;
+if(typeof _ac==="undefined"){var _ac=null;}
 function sfx(t){
   try{
     if(!_ac)_ac=new(window.AudioContext||window.webkitAudioContext)();

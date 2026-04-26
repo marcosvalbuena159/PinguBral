@@ -406,10 +406,13 @@ function buildShopExchange(cont) {
   cont.appendChild(grid);
 }
 
-function doExchange(fromCur,fromAmt,toCur,toAmt,btn) {
-  const u=getCurrUser(); if(!u){showToast('⚠️ Inicia sesión','#ff8844');return;}
-  if(u[fromCur]<fromAmt){showToast('❌ No tienes suficiente '+CICONS[fromCur],'#ff4444');return;}
-  u[fromCur]-=fromAmt; u[toCur]=(u[toCur]||0)+toAmt; saveCurrUser(u); updateTopbarCurrencies();
+async function doExchange(fromCur,fromAmt,toCur,toAmt,btn) {
+  if(!window.PB?.jugador){showToast('⚠️ Inicia sesión','#ff8844');return;}
+  const saldoEx=window.PB?.monedero?.[fromCur]??0;
+  if(saldoEx<fromAmt){showToast('❌ No tienes suficiente '+(window.CICONS?.[fromCur]??''),'#ff4444');return;}
+  const okEx=await gastarMoneda(fromCur,fromAmt,'intercambio_'+fromCur+'_a_'+toCur);
+  if(!okEx){showToast('❌ Error en el intercambio','#ff4444');return;}
+  await addCurrency(toCur,toAmt,'intercambio_'+fromCur+'_a_'+toCur);
   showToast('✅ +'+toAmt+' '+CICONS[toCur],'#44ff88');
   btn.textContent='✅'; btn.disabled=true;
   setTimeout(()=>{btn.textContent='Cambiar';btn.disabled=false;},2500);
@@ -417,7 +420,7 @@ function doExchange(fromCur,fromAmt,toCur,toAmt,btn) {
 
 function buyChar(key,price,currency) {
   const ok=buyItem('char',key,price,currency);
-  if(ok){CHARS_DEF[key].owned=true;const u=getCurrUser();if(u){u.ownedChars=[...(u.ownedChars||[]),key];saveCurrUser(u);}buildShop(currentShopTab);}
+  if(ok){CHARS_DEF[key].owned=true;buildShop(currentShopTab);}
 }
 
 // ══ OVERLAY ══════════════════════════════════════════
@@ -477,12 +480,12 @@ function buildShopKrill(cont) {
   cont.appendChild(earnSec);
 }
 
-function doKrillBuy(price, krillAmount, btn) {
-  const u = getCurrUser(); if(!u){showToast('⚠️ Inicia sesión','#ff8844');return;}
-  if(u.peces < price){showToast('❌ No tienes suficiente 🐟 (necesitas '+price.toLocaleString('es')+')','#ff4444');return;}
-  u.peces -= price;
-  u.krill = (u.krill||0) + krillAmount;
-  saveCurrUser(u);
+async function doKrillBuy(price, krillAmount, btn) {
+  if(!window.PB?.jugador){showToast('⚠️ Inicia sesión','#ff8844');return;}
+  if((window.PB?.monedero?.peces??0)<price){showToast('❌ No tienes suficiente 🐟 (necesitas '+price.toLocaleString('es')+')','#ff4444');return;}
+  const okKrill=await gastarMoneda('peces',price,'compra_krill_pack');
+  if(!okKrill){showToast('❌ Error al procesar','#ff4444');return;}
+  await addCurrency('krill',krillAmount,'compra_krill_pack');
   updateTopbarCurrencies();
   showToast('🦐 +'+krillAmount+' Krill obtenido!','#66dd44');
   btn.textContent='✅ Comprado';

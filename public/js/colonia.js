@@ -648,12 +648,64 @@ function buildColonia() {
       </div>`).join('');
   };
   window.joinClan = name => { S.inClan=true; render(); if(typeof showToast==='function')showToast('🐧 ¡Te uniste a '+name+'!','#44ff88'); };
-  window.doCreateClan = function() {
+  window.doCreateClan = async function() {
     const nameEl=document.getElementById('new-clan-name'),descEl=document.getElementById('new-clan-desc');
     const name=nameEl?.value.trim(); if(!name){if(typeof showToast==='function')showToast('⚠️ Escribe un nombre','#ffaa44');return;}
-    try{const u=getCurrUser();if(u){if(u.piedras<CLAN_CREATE_COST){if(typeof showToast==='function')showToast('❌ Necesitas 🪨 '+CLAN_CREATE_COST+' Piedras','#ff4444');return;}u.piedras-=CLAN_CREATE_COST;saveCurrUser(u);updateTopbarCurrencies();}}catch(e){}
+    // Gastar piedras via Supabase
+    const saldo = window.PB?.monedero?.piedras ?? 0;
+    if(saldo < CLAN_CREATE_COST){
+      if(typeof showToast==='function') showToast('❌ Necesitas 🪨 '+CLAN_CREATE_COST+' Piedras','#ff4444');
+      return;
+    }
+    const gastOk = await gastarMoneda('piedras', CLAN_CREATE_COST, 'creacion_colonia_'+name);
+    if(!gastOk){ showToast('❌ Error al procesar pago','#ff4444'); return; }
     myClan.name=name;myClan.desc=descEl?.value.trim()||'Nueva colonia en construcción.';myClan.shield=window._selectedCreateShield||'🛡️';myClan.founder=(typeof currentUser!=='undefined'&&currentUser)||'Tú';
     S.inClan=true;S.myRole='lider';if(me)me.role='lider';
     render();if(typeof showToast==='function')showToast('🎉 ¡Colonia creada! -🪨'+CLAN_CREATE_COST,'#a078ff');
   };
+
+
+// ══ SUPABASE — carga colonias reales ═══════════════════════════
+
+async function cargarColoniasDB(query) {
+  const sb = window._sb;
+  if (!sb) return null;
+  try {
+    let q = sb.from('colonias')
+      .select('id,nombre,escudo_url,nivel,codigo,tipo,descripcion,requerimientos,max_integrantes,puntos_totales,victorias_guerra')
+      .order('puntos_totales', { ascending: false })
+      .limit(30);
+    if (query) q = q.ilike('nombre', '%' + query + '%');
+    const { data, error } = await q;
+    if (error) { console.warn('[colonia]', error.message); return null; }
+    return data;
+  } catch(e) { return null; }
+}
+
+async function cargarMiColoniaDB() {
+  const sb = window._sb, jug = window.PB?.jugador;
+  if (!sb || !jug?.id) return null;
+  try {
+    const { data } = await sb
+      .from('integrantes_colonia')
+      .select('rol, puntos_aportados, colonia_id, colonias(id,nombre,nivel,puntos_totales,victorias_guerra,codigo,tipo,max_integrantes)')
+      .eq('jugador_id', jug.id)
+      .maybeSingle();
+    return data;
+  } catch(e) { return null; }
+}
+
+async function cargarIntegrantesDB(coloniaId) {
+  const sb = window._sb;
+  if (!sb) return [];
+  try {
+    const { data } = await sb
+      .from('integrantes_colonia')
+      .select('rol, puntos_aportados, jugadores(usuario, nivel_jugador)')
+      .eq('colonia_id', coloniaId)
+      .order('puntos_aportados', { ascending: false });
+    return data ?? [];
+  } catch(e) { return []; }
+}
+
 }

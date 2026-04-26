@@ -1,10 +1,30 @@
+// ══ SUPABASE — progreso real de misiones ════════════════
+
+async function cargarProgresoMisionesDB() {
+  const sb = window._sb, jug = window.PB?.jugador;
+  if (!sb || !jug?.id) return null;
+  try {
+    const { data } = await sb
+      .from('progreso_mision')
+      .select('mision_id, progreso_actual, completada, misiones(nombre, tipo, recompensa_cantidad, meta, descripcion)')
+      .eq('jugador_id', jug.id)
+      .eq('completada', false);
+    return data ?? [];
+  } catch(e) { return null; }
+}
+
 // ═══════════════════════════════════════════════════════
 //  MISIONES & EVENTOS
 // ═══════════════════════════════════════════════════════
 
-function buildMisiones() {
+async function buildMisiones() {
 
-  // ── DATOS ──────────────────────────────────────────
+  // ── DATOS — intentar cargar desde Supabase ──
+  // Si hay misiones en DB, se mostrarán los datos reales
+  // Si no, se usan los datos demo de abajo
+  const dbMisiones = await cargarProgresoMisionesDB();
+
+  // ── DATOS DEMO ──────────────────────────────────────────
   const daily = [
     { icon:'⚔️', name:'Primera Sangre',     desc:'Elimina a un enemigo en una partida',       prog:0,   max:1,     rew:80,  done:false },
     { icon:'🏠', name:'Destructor de Bases', desc:'Inflige 500 de daño a la base enemiga',     prog:340, max:500,   rew:50,  done:false },
@@ -207,18 +227,13 @@ function buildMisiones() {
   }
 
   // ── CLAIM MISIÓN ──────────────────────────────────
-  window.claimMission = function(name, rew) {
+  window.claimMission = async function(name, rew) {
     state.claimedMissions.add(name);
 
-    // Sumar krill al usuario si existe la función
-    try {
-      const u = getCurrUser();
-      if (u) {
-        u.krill = (u.krill || 0) + rew;
-        saveCurrUser(u);
-        updateTopbarCurrencies();
-      }
-    } catch(e) {}
+    // Dar krill via Supabase (perfil_monedero.js)
+    if (typeof addCurrency === 'function') {
+      await addCurrency('krill', rew, 'mision_' + name.toLowerCase().replace(/\s+/g,'_'));
+    }
 
     if (typeof showToast === 'function') showToast('🦐 +' + rew + ' Krill reclamado!', '#44aaff');
     renderMissions();

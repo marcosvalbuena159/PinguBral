@@ -52,7 +52,17 @@ function loadSettings() {
   catch (e) { return { ...SETTINGS_DEFAULT }; }
 }
 function saveSettings(s) {
-  try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(s)); } catch (e) {}
+  try {
+    localStorage.setItem(SETTINGS_KEY, JSON.stringify(s));
+    // Sincronizar idioma y región a Supabase si el jugador está autenticado
+    const jug = window.PB?.jugador;
+    if (window._sb && jug?.id && (s.language || s.region)) {
+      window._sb.from('ajustes_jugador')
+        .update({ idioma: s.language ?? 'es' })
+        .eq('jugador_id', jug.id)
+        .then(() => {}); // fire and forget
+    }
+  } catch (e) {}
 }
 function getSetting(key) { return loadSettings()[key]; }
 function setSetting(key, val) {
@@ -287,8 +297,8 @@ function resetControls() {
 // ══ TAB: CUENTA ═════════════════════════════════════════
 function buildCuentaTab(cont) {
   const s  = loadSettings();
-  const u  = getCurrUser();
-  const isGuest = !u || !u.pass;
+  const u  = window.PB?.jugador ?? null;
+  const isGuest = !u;
 
   cont.appendChild(ajSection('Perfil', `
     <div class="aj-profile-row">
@@ -332,7 +342,7 @@ function buildCuentaTab(cont) {
           <div class="aj-danger-title">Cerrar sesión</div>
           <div class="aj-danger-desc">Saldrás de tu cuenta en este dispositivo</div>
         </div>
-        <button class="aj-danger-btn secondary" onclick="showLogin()">Cerrar sesión</button>
+        <button class="aj-danger-btn secondary" onclick="doLogout()">Cerrar sesión</button>
       </div>
       <div class="aj-danger-item">
         <div>
@@ -348,33 +358,61 @@ function buildCuentaTab(cont) {
   bindSelects(cont);
 }
 
-function changePassword() {
-  const old  = document.getElementById('aj-pass-old')?.value.trim();
-  const nw   = document.getElementById('aj-pass-new')?.value.trim();
-  const nw2  = document.getElementById('aj-pass-new2')?.value.trim();
-  const u    = getCurrUser();
-  if (!u) return;
-  if (u.pass !== old) { showToast('❌ Contraseña actual incorrecta', '#ff4444'); return; }
+async function changePassword() {
+  const oldPass = document.getElementById('aj-pass-old')?.value.trim();
+  const nw      = document.getElementById('aj-pass-new')?.value.trim();
+  const nw2     = document.getElementById('aj-pass-new2')?.value.trim();
+
+  if (!window._sb || !window.PB?.jugador) return;
   if (nw.length < 4)  { showToast('❌ Mínimo 4 caracteres', '#ff8844'); return; }
   if (nw !== nw2)     { showToast('❌ Las contraseñas no coinciden', '#ff8844'); return; }
-  u.pass = nw;
-  saveCurrUser(u);
+
+  // Verificar contraseña actual re-autenticando
+  const email = window.PB.jugador.correo;
+  const { error: signErr } = await window._sb.auth.signInWithPassword({ email, password: oldPass });
+  if (signErr) { showToast('❌ Contraseña actual incorrecta', '#ff4444'); return; }
+
+  // Cambiar contraseña en Supabase Auth
+  const { error } = await window._sb.auth.updateUser({ password: nw });
+  if (error) { showToast('❌ Error: ' + error.message, '#ff4444'); return; }
+
   showToast('✅ Contraseña actualizada', '#44ff88');
   ['aj-pass-old','aj-pass-new','aj-pass-new2'].forEach(id => { const el=document.getElementById(id); if(el)el.value=''; });
 }
 
-function confirmResetProgress() {
+async function confirmResetProgress() {
   const confirmed = confirm('⚠️ ¿Borrar todo el progreso? Esta acción es IRREVERSIBLE.\n\nSe borrarán:\n• Monedas\n• Inventario\n• Estadísticas');
   if (!confirmed) return;
-  const u = getCurrUser();
-  if (!u) return;
-  const fresh = { pass:u.pass, created:u.created, lastLogin:Date.now(),
-    peces:500, krill:0, piedras:0, perlas:0,
-    ownedChars:['polar','chili'], ownedSkins:[], ownedEmotes:[], ownedIcons:[], ownedBgs:[],
-    wins:0, losses:0, totalDmg:0, totalKills:0, rankPts:0 };
-  saveCurrUser(fresh);
-  updateTopbarCurrencies();
-  showToast('🔄 Progreso reiniciado', '#ff8844');
+  const sb  = window._sb;
+  const jug = window.PB?.jugador;
+  if (!sb || !jug?.id) return;
+
+  try {
+    // Resetear monedero a valores iniciales
+    const { error } = await sb.from('monedero_jugador')
+      .update({ peces:500, krill:0, piedras:0, perlas:0, actualizado_en: new Date().toISOString() })
+      .eq('jugador_id', jug.id);
+    if (error) { showToast('❌ Error al resetear: ' + error.message, '#ff4444'); return; }
+
+    // Borrar colección (excepto pingüinos base que no están en DB)
+    await sb.from('coleccion_jugador').delete().eq('jugador_id', jug.id);
+
+    // Actualizar estado local
+    if (window.PB.monedero) {
+      window.PB.monedero = { peces:500, krill:0, piedras:0, perlas:0 };
+    }
+    window.PB._ownedChars     = ['polar','chili'];
+    window.PB._ownedSkins     = [];
+    window.PB._ownedIcons     = [];
+    window.PB._ownedFondos    = [];
+    window.PB._ownedReacciones= [];
+
+    updateTopbarCurrencies();
+    if (typeof syncOwnedChars === 'function') syncOwnedChars();
+    showToast('🔄 Progreso reiniciado', '#ff8844');
+  } catch(e) {
+    showToast('❌ Error de conexión', '#ff4444');
+  }
 }
 
 // ══ TAB: ACCESIBILIDAD ══════════════════════════════════
