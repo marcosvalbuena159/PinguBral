@@ -30,6 +30,7 @@ function showLogin(){
   const bar  = document.getElementById('auth-bar'); if(bar)  bar.style.display  = '';
 }
 function syncOwnedChars(){
+  if(typeof CHARS_DEF==='undefined')return; // main.js may not be ready
   const owned=window.PB?._ownedChars??['polar','chili'];
   Object.keys(CHARS_DEF).forEach(k=>{CHARS_DEF[k].owned=owned.includes(k);});
 }

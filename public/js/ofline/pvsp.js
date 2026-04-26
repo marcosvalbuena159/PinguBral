@@ -33,11 +33,11 @@ const WALLS=[
   {x:165,y:340,w:58,h:52,t:'rock'},{x:637,y:128,w:58,h:52,t:'rock'},
   {x:310,y:100,w:48,h:48,t:'ice'},{x:502,y:372,w:48,h:48,t:'ice'},
 ];
-const BUSHES=[
+if(typeof BUSHES==="undefined"){var BUSHES=[
   {x:148,y:188,w:88,h:72},{x:624,y:260,w:88,h:72},
   {x:376,y:118,w:80,h:68},{x:396,y:328,w:80,h:68},
   {x:228,y:372,w:80,h:64},{x:552,y:72,w:80,h:64},
-];
+];}
 
 function hitW(x,y,w,h){for(const W of WALLS){if(x<W.x+W.w&&x+w>W.x&&y<W.y+W.h&&y+h>W.y)return true;}return false;}
 function inBush(p){for(const b of BUSHES){if(p.cx>b.x+8&&p.cx<b.x+b.w-8&&p.cy>b.y+8&&p.cy<b.y+b.h-8)return b;}return null;}

@@ -5,7 +5,7 @@
 //    DERECHA   — tabla de clasificación del rango actual
 // ═══════════════════════════════════════════════════════
 
-const RANKS = [
+if(typeof RANKS==="undefined"){var RANKS=[
   { icon:'🐣', name:'Polluelo',    color:'#aabbcc', tiers:3, pts:'0–299'    },
   { icon:'🦐', name:'Recolector',  color:'#66aacc', tiers:3, pts:'300–799'  },
   { icon:'🐟', name:'Pescador',    color:'#44aadd', tiers:3, pts:'800–1499' },
@@ -14,7 +14,7 @@ const RANKS = [
   { icon:'❄️', name:'Explorador',  color:'#aaddff', tiers:3, pts:'4000–5999'},
   { icon:'👑', name:'Emperador',   color:'#ffd080', tiers:3, pts:'6000–8999'},
   { icon:'🌌', name:'Leyenda',     color:'#cc88ff', tiers:0, pts:'9000+'    },
-];
+];}
 
 // Todos los jugadores del leaderboard — cada uno tiene rankIdx y tier
 const ALL_LB_PLAYERS = [
@@ -39,8 +39,68 @@ const ALL_LB_PLAYERS = [
 const MY_RANK = { rankIdx:0, tier:2, pts:45, maxPts:300 };
 let rankPanelOpen = false;
 
+
+// ════════════════════════════════════════════════════════════════
+//  SUPABASE — datos reales de ranking
+// ════════════════════════════════════════════════════════════════
+
+let _dominioData = null; // cache por sesión
+
+async function cargarDominioReal() {
+  const sb = window._sb, jug = window.PB?.jugador;
+  if (!sb || !jug?.id) return null;
+  if (_dominioData) return _dominioData;
+
+  try {
+    // Temporada activa
+    const { data: temp } = await sb
+      .from('temporadas')
+      .select('id,nombre')
+      .eq('activa', true)
+      .maybeSingle();
+
+    if (!temp) return null;
+
+    // Ranking del jugador actual
+    const { data: miRank } = await sb
+      .from('ranking_jugador')
+      .select('puntos, rango_id, rangos_dominio(nombre,sub_nivel,orden)')
+      .eq('jugador_id', jug.id)
+      .eq('temporada_id', temp.id)
+      .maybeSingle();
+
+    // Top 50 del leaderboard global
+    const { data: lb } = await sb
+      .rpc('tabla_clasificacion', {
+        p_temporada_id: temp.id,
+        p_ambito: 'global',
+        p_limite: 50
+      });
+
+    _dominioData = { temp, miRank, lb: lb ?? [] };
+    return _dominioData;
+  } catch(e) {
+    console.warn('[dominio] error cargando datos:', e);
+    return null;
+  }
+}
+
+// Mapear nombre de rango DB → índice en RANKS[]
+function _rankNombreToIdx(nombre) {
+  const map = {
+    'Polluelo':0,'Recolector':1,'Pescador':2,'Constructor':3,
+    'Guardián':4,'Explorador':5,'Emperador':6,'Leyenda':7
+  };
+  return map[nombre] ?? 0;
+}
+
+// Mapear sub_nivel DB ('I','II','III',null) → tier number
+function _subNivelToTier(sub) {
+  return sub === 'I' ? 1 : sub === 'II' ? 2 : sub === 'III' ? 3 : 1;
+}
+
 // ── ENTRY POINT ────────────────────────────────────────
-function buildDominio() {
+async function buildDominio() {
   // Inyecta el HTML del layout 2 columnas en page-dominio
   // (debajo del page-header que ya está en el HTML)
   const page = document.getElementById('page-dominio');
@@ -75,6 +135,42 @@ function buildDominio() {
     </div>
   `;
   page.appendChild(layout);
+
+  // Intentar cargar datos reales de Supabase
+  const real = await cargarDominioReal();
+
+  if (real?.miRank) {
+    const rango = real.miRank.rangos_dominio;
+    const ridx  = _rankNombreToIdx(rango?.nombre);
+    const tier  = _subNivelToTier(rango?.sub_nivel);
+    const pts   = real.miRank.puntos ?? 0;
+    const maxPts = [300,800,1500,2500,4000,6000,9000,Infinity][ridx] ?? 300;
+    MY_RANK.rankIdx = ridx;
+    MY_RANK.tier    = tier;
+    MY_RANK.pts     = pts;
+    MY_RANK.maxPts  = maxPts;
+  }
+
+  if (real?.lb?.length) {
+    ALL_LB_PLAYERS.length = 0; // limpiar datos demo
+    const me = window.PB?.jugador;
+    real.lb.forEach((r, i) => {
+      const partes = (r.rango ?? '').split(' ');
+      const rNom   = partes[0];
+      const rSub   = partes[1] ?? null;
+      const ridx   = _rankNombreToIdx(rNom);
+      const tier   = _subNivelToTier(rSub);
+      ALL_LB_PLAYERS.push({
+        pos:    i + 1,
+        name:   r.usuario,
+        rankIdx: ridx,
+        tier:   tier,
+        pts:    Number(r.puntos),
+        col:    RANKS[ridx]?.color ?? '#aabbcc',
+        isMe:   r.jugador_id === me?.id,
+      });
+    });
+  }
 
   renderMyRank();
   renderRankGrid();

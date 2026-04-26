@@ -85,11 +85,11 @@ async function _initColeccion() {
   window.PB._ownedIcons     = col.filter(c=>c.item_tipo==='icono').map(c=>c.icono_id);
   window.PB._ownedFondos    = col.filter(c=>c.item_tipo==='fondo').map(c=>c.fondo_id);
   window.PB._ownedReacciones= col.filter(c=>c.item_tipo==='reaccion').map(c=>c.reaccion_id);
-  syncOwnedChars();
+  if(typeof CHARS_DEF!=='undefined') syncOwnedChars();
 }
 
 function syncOwnedChars() {
-  if (typeof CHARS_DEF === 'undefined') return;
+  if (typeof CHARS_DEF === 'undefined' || typeof CHARS_DEF !== 'object') return;
   const owned = window.PB?._ownedChars ?? ['polar','chili'];
   Object.keys(CHARS_DEF).forEach(k => { CHARS_DEF[k].owned = owned.includes(k); });
 }
